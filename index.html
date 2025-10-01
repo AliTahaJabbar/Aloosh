@@ -1,6 +1,13 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
+    <meta http-equiv="Content-Security-Policy" content="
+      default-src 'self' https:;
+      script-src 'self' 'unsafe-eval' 'unsafe-inline' https://cdn.tailwindcss.com https://unpkg.com https://apis.google.com https://accounts.google.com;
+      connect-src 'self' https://*.googleapis.com https://accounts.google.com;
+     frame-src 'self' https://accounts.google.com;
+    ">
+
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" href="https://i.top4top.io/p_3450gatpo0.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -260,11 +267,17 @@
           return debounced;
       };
 
+      // === إضافة لتصحيح الأخطاء ===
+      console.log('=== Smart Age Debug ===');
+      console.log('Window location:', window.location.href);
+      console.log('Window origin:', window.location.origin);
+      // === نهاية الإضافة ===
+
       // IMPORTANT: Replace these placeholder values with your actual Google Cloud credentials.
       // Note: Storing API keys and client IDs in frontend code is a security risk.
       // For production applications, these should be handled securely.
-      const GOOGLE_API_KEY = 'AIzaSyB_nOkMTYESe_6BenTQVXkQApDhStblnjE';
-      const GOOGLE_CLIENT_ID = '672991789327-5t55rnrn3625hlls6hohjko9r6jg0ft3.apps.googleusercontent.com';
+      const GOOGLE_API_KEY = 'AIzaSyB9w43IluUhR1g9wFyGvQ1G4ZHNHVHX6S0';
+      const GOOGLE_CLIENT_ID = '672991789327-avu31r65pavg56s2nt4epk27bi71sg67.apps.googleusercontent.com';
 
       const SCOPES = 'https://www.googleapis.com/auth/drive.file';
       const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest';

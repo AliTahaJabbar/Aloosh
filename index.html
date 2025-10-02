@@ -292,21 +292,46 @@
         const isSyncReady = gapiInitialized && gisInitialized;
 
         const saveDataToDrive = useCallback(async (dataToSave) => {
-            if (!driveFileId) return false;
+            if (!driveFileId) {
+                console.error('No file ID available for saving');
+                return false;
+            }
+            
             setSyncStatus('SYNCING');
             try {
-                await window.gapi.client.request({
+                // التأكد من أن البيانات صالحة للتحويل إلى JSON
+                const dataString = JSON.stringify(dataToSave, null, 2);
+                console.log('Saving data to Drive, file ID:', driveFileId);
+                
+                const response = await window.gapi.client.request({
                     path: `/upload/drive/v3/files/${driveFileId}`,
                     method: 'PATCH',
-                    params: { uploadType: 'media' },
-                    body: JSON.stringify(dataToSave, null, 2)
+                    params: { 
+                        uploadType: 'media',
+                        fields: 'id, modifiedTime'
+                    },
+                    body: dataString
                 });
+                
+                console.log('Save successful:', response);
                 setSyncStatus('SYNCED');
                 setLastSyncTime(new Date());
                 setHasUnsavedChanges(false);
                 return true;
             } catch (error) {
                 console.error("Error saving data to Drive:", error);
+                
+                // معلومات تفصيلية عن الخطأ
+                if (error.result && error.result.error) {
+                    console.error('Drive API error details:', error.result.error);
+                    if (error.result.error.code === 403) {
+                        showToast('ليس لديك صلاحية الكتابة إلى الملف', 'error');
+                    } else if (error.result.error.code === 404) {
+                        showToast('ملف البيانات غير موجود', 'error');
+                        setDriveFileId(null); // إعادة تعيين fileId لإجبار إنشاء ملف جديد
+                    }
+                }
+                
                 setSyncStatus('ERROR');
                 return false;
             }
@@ -395,33 +420,55 @@
 
         const findOrCreateFile = useCallback(async () => {
             try {
+                console.log('Searching for file:', FILE_NAME);
+                
                 const response = await window.gapi.client.drive.files.list({
                     q: `name='${FILE_NAME}' and trashed=false`,
-                    fields: 'files(id, name)',
+                    fields: 'files(id, name, createdTime, modifiedTime)',
                     spaces: 'drive'
                 });
 
+                console.log('File search response:', response);
+
                 if (response.result.files.length > 0) {
-                    return response.result.files[0].id;
+                    const file = response.result.files[0];
+                    console.log('Found existing file:', file);
+                    return file.id;
                 } else {
                     if (userRole !== 'admin') {
                         showToast('ملف البيانات غير موجود. يرجى طلب من المسؤول تسجيل الدخول أولاً لإنشائه.', 'error');
                         return null;
                     }
+                    
+                    console.log('Creating new file...');
                     const createResponse = await window.gapi.client.drive.files.create({
                         resource: { 
                             name: FILE_NAME, 
                             mimeType: 'application/json',
                             parents: ['root']
                         },
-                        fields: 'id'
+                        fields: 'id, name'
                     });
+                    
                     const fileId = createResponse.result.id;
+                    console.log('New file created:', createResponse.result);
+                    
+                    // حفظ البيانات الابتدائية في الملف الجديد
                     await saveDataToDrive(INITIAL_DATA);
+                    showToast('تم إنشاء ملف بيانات جديد في Google Drive', 'success');
                     return fileId;
                 }
             } catch (err) {
                 console.error("Error finding or creating file:", err);
+                
+                // معلومات تفصيلية عن الخطأ
+                if (err.result && err.result.error) {
+                    console.error('Drive API error details:', err.result.error);
+                    if (err.result.error.code === 403) {
+                        showToast('ليس لديك صلاحية إنشاء ملفات في Drive', 'error');
+                    }
+                }
+                
                 setSyncStatus('ERROR');
                 return null;
             }
@@ -435,7 +482,35 @@
                     fileId, 
                     alt: 'media' 
                 });
-                const parsedData = JSON.parse(response.body);
+                
+                console.log('Drive response:', response);
+                
+                // التحقق من وجود البيانات
+                if (!response.body) {
+                    console.warn('Empty response from Drive, using initial data');
+                    setData(INITIAL_DATA);
+                    setSyncStatus('SYNCED');
+                    setLastSyncTime(new Date());
+                    setHasUnsavedChanges(false);
+                    showToast('تم تحميل البيانات الافتراضية (الملف كان فارغاً)', 'info');
+                    return;
+                }
+
+                let parsedData;
+                try {
+                    parsedData = JSON.parse(response.body);
+                } catch (parseError) {
+                    console.error('JSON parse error:', parseError);
+                    console.log('Response body that failed to parse:', response.body);
+                    
+                    // إذا فشل التحليل، استخدام البيانات الافتراضية
+                    showToast('خطأ في تنسيق البيانات، تم استخدام البيانات الافتراضية', 'warning');
+                    parsedData = INITIAL_DATA;
+                    
+                    // محاولة إصلاح الملف
+                    await saveDataToDrive(INITIAL_DATA);
+                }
+
                 setData(parsedData);
                 setSyncStatus('SYNCED');
                 setLastSyncTime(new Date());
@@ -443,8 +518,20 @@
                 showToast('تم تحميل البيانات من Google Drive بنجاح!', 'success');
             } catch (error) {
                 console.error("Error loading data:", error);
+                
+                // معلومات تفصيلية عن الخطأ
+                if (error.status === 404) {
+                    showToast('ملف البيانات غير موجود في Drive', 'error');
+                } else if (error.status === 403) {
+                    showToast('ليس لديك صلاحية الوصول إلى الملف', 'error');
+                } else if (error.status === 401) {
+                    showToast('انتهت جلسة المصادقة، يرجى إعادة التسجيل', 'error');
+                    handleGoogleSignOut();
+                } else {
+                    showToast('فشل تحميل البيانات من Google Drive.', 'error');
+                }
+                
                 setSyncStatus('ERROR');
-                showToast('فشل تحميل البيانات من Google Drive.', 'error');
             }
         }, []);
 
@@ -471,23 +558,38 @@
                     callback: async (response) => {
                         if (response.error) {
                             console.error('Google Sign-In error:', response);
+                            
+                            if (response.error === 'popup_closed_by_user') {
+                                showToast('تم إغلاق نافذة المصادقة', 'info');
+                            } else if (response.error === 'access_denied') {
+                                showToast('تم رفض الوصول من قبل المستخدم', 'error');
+                            } else {
+                                showToast('فشل المصادقة مع Google Drive: ' + response.error, 'error');
+                            }
+                            
                             setSyncStatus('ERROR');
-                            showToast('فشل المصادقة مع Google Drive.', 'error');
                             return;
                         }
 
-                        window.gapi.client.setToken({
-                            access_token: response.access_token,
-                            expires_in: response.expires_in
-                        });
+                        try {
+                            window.gapi.client.setToken({
+                                access_token: response.access_token,
+                                expires_in: response.expires_in
+                            });
 
-                        setIsSignedInToGoogle(true);
-                        const fileId = await findOrCreateFile();
-                        if (fileId) {
-                            setDriveFileId(fileId);
-                            await loadDataFromDrive(fileId);
-                        } else {
-                            handleGoogleSignOut();
+                            setIsSignedInToGoogle(true);
+                            const fileId = await findOrCreateFile();
+                            
+                            if (fileId) {
+                                setDriveFileId(fileId);
+                                await loadDataFromDrive(fileId);
+                            } else {
+                                handleGoogleSignOut();
+                            }
+                        } catch (innerError) {
+                            console.error('Error after token callback:', innerError);
+                            setSyncStatus('ERROR');
+                            showToast('حدث خطأ أثناء معالجة الاستجابة', 'error');
                         }
                     },
                 });
@@ -500,12 +602,22 @@
             }
         }, [isSyncReady, findOrCreateFile, loadDataFromDrive, handleGoogleSignOut]);
 
+        // إعادة تعيين البيانات إلى القيم الافتراضية
+        const resetToInitialData = useCallback(() => {
+            if (window.confirm('هل تريد حقاً إعادة تعيين جميع البيانات إلى القيم الافتراضية؟ سيتم فقدان جميع التغييرات غير المحفوظة.')) {
+                setData(INITIAL_DATA);
+                setHasUnsavedChanges(true);
+                showToast('تم إعادة تعيين البيانات إلى القيم الافتراضية', 'info');
+            }
+        }, []);
+
         return (
             <DataContext.Provider value={{ 
                 data, 
                 updateData, 
                 updateField, 
                 saveData,
+                resetToInitialData,
                 hasUnsavedChanges,
                 syncStatus, 
                 lastSyncTime, 
@@ -854,6 +966,7 @@
 
     const Layout = ({children, activeSection, setActiveSection}) => {
         const { userRole, logout } = useAuth();
+        const { resetToInitialData } = useData();
         const [isMobileNavOpen, setMobileNavOpen] = useState(false);
         const [isPasswordModalOpen, setPasswordModalOpen] = useState(false);
 
@@ -897,9 +1010,14 @@
                                     <span className="font-semibold text-sm">{userRole ? roleText[userRole] : ''}</span>
                                 </div>
                                 {userRole === 'admin' && (
-                                    <button onClick={() => setPasswordModalOpen(true)} className="flex items-center gap-2 text-sm font-semibold border-2 border-yellow-500 text-yellow-500 px-3 py-1.5 rounded-lg hover:bg-yellow-500 hover:text-slate-900 transition-colors">
-                                        <i className="fas fa-key"></i>
-                                    </button>
+                                    <>
+                                        <button onClick={() => setPasswordModalOpen(true)} className="flex items-center gap-2 text-sm font-semibold border-2 border-yellow-500 text-yellow-500 px-3 py-1.5 rounded-lg hover:bg-yellow-500 hover:text-slate-900 transition-colors">
+                                            <i className="fas fa-key"></i>
+                                        </button>
+                                        <button onClick={resetToInitialData} className="flex items-center gap-2 text-sm font-semibold border-2 border-purple-500 text-purple-500 px-3 py-1.5 rounded-lg hover:bg-purple-500 hover:text-white transition-colors" title="إعادة تعيين البيانات">
+                                            <i className="fas fa-redo"></i>
+                                        </button>
+                                    </>
                                 )}
                                 <button onClick={logout} className="flex items-center gap-2 text-sm font-semibold border-2 border-red-500 text-red-500 px-3 py-1.5 rounded-lg hover:bg-red-500 hover:text-white transition-colors">
                                     <i className="fas fa-sign-out-alt"></i>
@@ -932,10 +1050,16 @@
                                 <span className="font-semibold">{userRole ? roleText[userRole] : ''}</span>
                             </div>
                             {userRole === 'admin' && (
-                                <button onClick={() => {setPasswordModalOpen(true); setMobileNavOpen(false)}} className="w-full flex items-center justify-center gap-2 text-sm font-semibold border-2 border-yellow-500 text-yellow-500 px-3 py-1.5 rounded-lg hover:bg-yellow-500 hover:text-slate-900 transition-colors">
-                                    <i className="fas fa-key"></i>
-                                    <span>تغيير كلمة المرور</span>
-                                </button>
+                                <>
+                                    <button onClick={() => {setPasswordModalOpen(true); setMobileNavOpen(false)}} className="w-full flex items-center justify-center gap-2 text-sm font-semibold border-2 border-yellow-500 text-yellow-500 px-3 py-1.5 rounded-lg hover:bg-yellow-500 hover:text-slate-900 transition-colors">
+                                        <i className="fas fa-key"></i>
+                                        <span>تغيير كلمة المرور</span>
+                                    </button>
+                                    <button onClick={() => {resetToInitialData(); setMobileNavOpen(false);}} className="w-full flex items-center justify-center gap-2 text-sm font-semibold border-2 border-purple-500 text-purple-500 px-3 py-1.5 rounded-lg hover:bg-purple-500 hover:text-white transition-colors">
+                                        <i className="fas fa-redo"></i>
+                                        <span>إعادة تعيين البيانات</span>
+                                    </button>
+                                </>
                             )}
                             <button onClick={logout} className="w-full flex items-center justify-center gap-2 text-sm font-semibold border-2 border-red-500 text-red-500 px-3 py-1.5 rounded-lg hover:bg-red-500 hover:text-white transition-colors">
                                 <i className="fas fa-sign-out-alt"></i>

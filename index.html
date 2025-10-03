@@ -207,30 +207,46 @@
 
     const AuthProvider = ({ children }) => {
       const [userRole, setUserRole] = useState(null);
+      const [userData, setUserData] = useState(null);
 
       useEffect(() => {
-        const storedRole = localStorage.getItem('smartAgeUserRole');
-        if (storedRole) {
-          setUserRole(storedRole);
+        const storedAuth = localStorage.getItem('smartAgeAuth');
+        if (storedAuth) {
+          try {
+            const authData = JSON.parse(storedAuth);
+            setUserRole(authData.role);
+            setUserData(authData);
+          } catch (e) {
+            console.error("Error parsing stored auth data:", e);
+            localStorage.removeItem('smartAgeAuth');
+          }
         }
       }, []);
 
       const login = (role, username, password) => {
+        let userInfo = { role, username, loginTime: new Date().toISOString() };
+        
         if (role === 'teamLeader') {
-          localStorage.setItem('smartAgeUserRole', role);
+          userInfo = { ...userInfo, id: 'teamLeader', name: 'قائد فريق' };
+          localStorage.setItem('smartAgeAuth', JSON.stringify(userInfo));
           setUserRole(role);
+          setUserData(userInfo);
           return true;
         }
         if (role === 'follower' && username === FOLLOWER_USERNAME && password === FOLLOWER_PASSWORD) {
-          localStorage.setItem('smartAgeUserRole', role);
+          userInfo = { ...userInfo, id: 'follower', name: 'متابع' };
+          localStorage.setItem('smartAgeAuth', JSON.stringify(userInfo));
           setUserRole(role);
+          setUserData(userInfo);
           return true;
         }
         if (role === 'admin' && username === ADMIN_USERNAME) {
           const adminPassword = localStorage.getItem("smartAgeAdminPassword") || DEFAULT_ADMIN_PASSWORD;
           if (password === adminPassword) {
-            localStorage.setItem('smartAgeUserRole', role);
+            userInfo = { ...userInfo, id: 'admin', name: 'مسؤول' };
+            localStorage.setItem('smartAgeAuth', JSON.stringify(userInfo));
             setUserRole(role);
+            setUserData(userInfo);
             return true;
           }
         }
@@ -238,8 +254,9 @@
       };
 
       const logout = () => {
-        localStorage.removeItem('smartAgeUserRole');
+        localStorage.removeItem('smartAgeAuth');
         setUserRole(null);
+        setUserData(null);
         window.location.reload();
       };
 
@@ -254,7 +271,7 @@
       };
 
       return (
-        <AuthContext.Provider value={{ userRole, login, logout, changePassword }}>
+        <AuthContext.Provider value={{ userRole, userData, login, logout, changePassword }}>
           {children}
         </AuthContext.Provider>
       );
@@ -278,9 +295,10 @@
     const DataContext = createContext(undefined);
 
     const DataProvider = ({ children }) => {
-        const { userRole } = useAuth();
+        const { userRole, userData } = useAuth();
         const [data, setData] = useState(INITIAL_DATA);
         const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+        const [lastSaveTime, setLastSaveTime] = useState(null);
         
         const [gapiInitialized, setGapiInitialized] = useState(false);
         const [gisInitialized, setGisInitialized] = useState(false);
@@ -288,8 +306,49 @@
         const [driveFileId, setDriveFileId] = useState(null);
         const [syncStatus, setSyncStatus] = useState('UNINITIALIZED');
         const [lastSyncTime, setLastSyncTime] = useState(null);
+        const [autoSaveEnabled, setAutoSaveEnabled] = useState(true);
         
         const isSyncReady = gapiInitialized && gisInitialized;
+        const canSyncWithDrive = userRole === 'admin' || userRole === 'teamLeader' || userRole === 'follower';
+
+        // حفظ البيانات تلقائياً عند التغيير
+        useEffect(() => {
+            if (hasUnsavedChanges && autoSaveEnabled) {
+                const autoSaveTimer = setTimeout(() => {
+                    if (canSyncWithDrive && isSignedInToGoogle) {
+                        saveDataToDrive(data);
+                    } else {
+                        saveDataLocally();
+                    }
+                }, 2000); // حفظ تلقائي بعد ثانيتين من التغيير
+
+                return () => clearTimeout(autoSaveTimer);
+            }
+        }, [hasUnsavedChanges, data, autoSaveEnabled]);
+
+        // محاولة التسجيل التلقائي مع Google Drive عند تحميل التطبيق
+        useEffect(() => {
+            if (userData && canSyncWithDrive && isSyncReady) {
+                const attemptAutoSignIn = async () => {
+                    try {
+                        const token = localStorage.getItem('googleDriveToken');
+                        if (token) {
+                            window.gapi.client.setToken({ access_token: token });
+                            setIsSignedInToGoogle(true);
+                            const fileId = await findOrCreateFile();
+                            if (fileId) {
+                                setDriveFileId(fileId);
+                                await loadDataFromDrive(fileId);
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Auto sign-in failed:', error);
+                        localStorage.removeItem('googleDriveToken');
+                    }
+                };
+                attemptAutoSignIn();
+            }
+        }, [userData, isSyncReady]);
 
         const saveDataToDrive = useCallback(async (dataToSave) => {
             if (!driveFileId) {
@@ -299,9 +358,7 @@
             
             setSyncStatus('SYNCING');
             try {
-                // التأكد من أن البيانات صالحة للتحويل إلى JSON
                 const dataString = JSON.stringify(dataToSave, null, 2);
-                console.log('Saving data to Drive, file ID:', driveFileId);
                 
                 const response = await window.gapi.client.request({
                     path: `/upload/drive/v3/files/${driveFileId}`,
@@ -313,22 +370,25 @@
                     body: dataString
                 });
                 
-                console.log('Save successful:', response);
                 setSyncStatus('SYNCED');
                 setLastSyncTime(new Date());
                 setHasUnsavedChanges(false);
+                setLastSaveTime(new Date());
                 return true;
             } catch (error) {
                 console.error("Error saving data to Drive:", error);
                 
-                // معلومات تفصيلية عن الخطأ
                 if (error.result && error.result.error) {
-                    console.error('Drive API error details:', error.result.error);
                     if (error.result.error.code === 403) {
                         showToast('ليس لديك صلاحية الكتابة إلى الملف', 'error');
                     } else if (error.result.error.code === 404) {
                         showToast('ملف البيانات غير موجود', 'error');
-                        setDriveFileId(null); // إعادة تعيين fileId لإجبار إنشاء ملف جديد
+                        setDriveFileId(null);
+                    } else if (error.result.error.code === 401) {
+                        // Token منتهي الصلاحية
+                        localStorage.removeItem('googleDriveToken');
+                        setIsSignedInToGoogle(false);
+                        showToast('انتهت جلسة العمل، يرجى إعادة التسجيل', 'error');
                     }
                 }
                 
@@ -337,8 +397,15 @@
             }
         }, [driveFileId]);
 
+        const saveDataLocally = useCallback(() => {
+            localStorage.setItem('smartAgeLocalData', JSON.stringify(data));
+            setHasUnsavedChanges(false);
+            setLastSaveTime(new Date());
+            return true;
+        }, [data]);
+
         const saveData = useCallback(async () => {
-            if (userRole === 'admin' && isSignedInToGoogle) {
+            if (canSyncWithDrive && isSignedInToGoogle) {
                 const success = await saveDataToDrive(data);
                 if (success) {
                     showToast('تم حفظ البيانات بنجاح في Google Drive!', 'success');
@@ -347,12 +414,11 @@
                 }
                 return success;
             } else {
-                localStorage.setItem('smartAgeLocalData', JSON.stringify(data));
-                setHasUnsavedChanges(false);
+                saveDataLocally();
                 showToast('تم حفظ البيانات محلياً بنجاح!', 'success');
                 return true;
             }
-        }, [userRole, isSignedInToGoogle, data, saveDataToDrive]);
+        }, [canSyncWithDrive, isSignedInToGoogle, data, saveDataToDrive, saveDataLocally]);
 
         const updateData = useCallback((newData) => {
             setData(newData);
@@ -373,6 +439,7 @@
             setHasUnsavedChanges(true);
         }, []);
 
+        // تحميل البيانات المحلية عند البدء
         useEffect(() => {
             const localData = localStorage.getItem('smartAgeLocalData');
             if (localData) {
@@ -384,6 +451,7 @@
             }
         }, []);
 
+        // تهيئة Google APIs
         useEffect(() => {
             const initializeGapi = () => {
                 if (window.gapi) {
@@ -394,7 +462,6 @@
                                 discoveryDocs: [DISCOVERY_DOC],
                             });
                             setGapiInitialized(true);
-                            console.log('gapi initialized successfully');
                         } catch (error) {
                             console.error('Error initializing gapi:', error);
                             setSyncStatus('ERROR');
@@ -408,7 +475,6 @@
             const initializeGis = () => {
                 if (window.google) {
                     setGisInitialized(true);
-                    console.log('GIS initialized successfully');
                 } else {
                     setTimeout(initializeGis, 100);
                 }
@@ -420,27 +486,21 @@
 
         const findOrCreateFile = useCallback(async () => {
             try {
-                console.log('Searching for file:', FILE_NAME);
-                
                 const response = await window.gapi.client.drive.files.list({
                     q: `name='${FILE_NAME}' and trashed=false`,
                     fields: 'files(id, name, createdTime, modifiedTime)',
                     spaces: 'drive'
                 });
 
-                console.log('File search response:', response);
-
                 if (response.result.files.length > 0) {
                     const file = response.result.files[0];
-                    console.log('Found existing file:', file);
                     return file.id;
                 } else {
-                    if (userRole !== 'admin') {
+                    if (!canSyncWithDrive) {
                         showToast('ملف البيانات غير موجود. يرجى طلب من المسؤول تسجيل الدخول أولاً لإنشائه.', 'error');
                         return null;
                     }
                     
-                    console.log('Creating new file...');
                     const createResponse = await window.gapi.client.drive.files.create({
                         resource: { 
                             name: FILE_NAME, 
@@ -451,7 +511,6 @@
                     });
                     
                     const fileId = createResponse.result.id;
-                    console.log('New file created:', createResponse.result);
                     
                     // حفظ البيانات الابتدائية في الملف الجديد
                     await saveDataToDrive(INITIAL_DATA);
@@ -461,9 +520,7 @@
             } catch (err) {
                 console.error("Error finding or creating file:", err);
                 
-                // معلومات تفصيلية عن الخطأ
                 if (err.result && err.result.error) {
-                    console.error('Drive API error details:', err.result.error);
                     if (err.result.error.code === 403) {
                         showToast('ليس لديك صلاحية إنشاء ملفات في Drive', 'error');
                     }
@@ -472,7 +529,7 @@
                 setSyncStatus('ERROR');
                 return null;
             }
-        }, [userRole, saveDataToDrive]);
+        }, [canSyncWithDrive, saveDataToDrive]);
 
         const loadDataFromDrive = useCallback(async (fileId) => {
             if (!fileId) return;
@@ -483,11 +540,7 @@
                     alt: 'media' 
                 });
                 
-                console.log('Drive response:', response);
-                
-                // التحقق من وجود البيانات
                 if (!response.body) {
-                    console.warn('Empty response from Drive, using initial data');
                     setData(INITIAL_DATA);
                     setSyncStatus('SYNCED');
                     setLastSyncTime(new Date());
@@ -501,13 +554,8 @@
                     parsedData = JSON.parse(response.body);
                 } catch (parseError) {
                     console.error('JSON parse error:', parseError);
-                    console.log('Response body that failed to parse:', response.body);
-                    
-                    // إذا فشل التحليل، استخدام البيانات الافتراضية
                     showToast('خطأ في تنسيق البيانات، تم استخدام البيانات الافتراضية', 'warning');
                     parsedData = INITIAL_DATA;
-                    
-                    // محاولة إصلاح الملف
                     await saveDataToDrive(INITIAL_DATA);
                 }
 
@@ -519,7 +567,6 @@
             } catch (error) {
                 console.error("Error loading data:", error);
                 
-                // معلومات تفصيلية عن الخطأ
                 if (error.status === 404) {
                     showToast('ملف البيانات غير موجود في Drive', 'error');
                 } else if (error.status === 403) {
@@ -533,10 +580,10 @@
                 
                 setSyncStatus('ERROR');
             }
-        }, []);
+        }, [saveDataToDrive]);
 
         const handleGoogleSignOut = useCallback(() => {
-            localStorage.removeItem('smartAgeLocalData');
+            localStorage.removeItem('googleDriveToken');
             setIsSignedInToGoogle(false);
             setDriveFileId(null);
             setSyncStatus('OFFLINE');
@@ -546,6 +593,11 @@
         const handleGoogleSignIn = useCallback(async () => {
             if (!isSyncReady) {
                 showToast('خدمات جوجل غير جاهزة بعد. يرجى الانتظار...', 'error');
+                return;
+            }
+
+            if (!canSyncWithDrive) {
+                showToast('ليس لديك صلاحية المزامنة مع Drive', 'error');
                 return;
             }
 
@@ -572,6 +624,9 @@
                         }
 
                         try {
+                            // حفظ التوكن للمصادقة التلقائية المستقبلية
+                            localStorage.setItem('googleDriveToken', response.access_token);
+                            
                             window.gapi.client.setToken({
                                 access_token: response.access_token,
                                 expires_in: response.expires_in
@@ -600,7 +655,7 @@
                 setSyncStatus('ERROR');
                 showToast('حدث خطأ أثناء محاولة المصادقة.', 'error');
             }
-        }, [isSyncReady, findOrCreateFile, loadDataFromDrive, handleGoogleSignOut]);
+        }, [isSyncReady, canSyncWithDrive, findOrCreateFile, loadDataFromDrive, handleGoogleSignOut]);
 
         // إعادة تعيين البيانات إلى القيم الافتراضية
         const resetToInitialData = useCallback(() => {
@@ -611,6 +666,11 @@
             }
         }, []);
 
+        const toggleAutoSave = useCallback(() => {
+            setAutoSaveEnabled(prev => !prev);
+            showToast(`الحفظ التلقائي ${!autoSaveEnabled ? 'مفعل' : 'معطل'}`, 'info');
+        }, [autoSaveEnabled]);
+
         return (
             <DataContext.Provider value={{ 
                 data, 
@@ -619,12 +679,16 @@
                 saveData,
                 resetToInitialData,
                 hasUnsavedChanges,
+                lastSaveTime,
                 syncStatus, 
                 lastSyncTime, 
                 isSignedInToGoogle, 
                 handleGoogleSignIn, 
                 handleGoogleSignOut, 
-                isSyncReady 
+                isSyncReady,
+                autoSaveEnabled,
+                toggleAutoSave,
+                canSyncWithDrive
             }}>
                 {children}
             </DataContext.Provider>
@@ -641,26 +705,27 @@
     
     // --- Save Button Component ---
     const SaveButton = ({ section }) => {
-        const { saveData, hasUnsavedChanges } = useData();
-        const [isSaving, setIsSaving] = useState(false);
+        const { saveData, hasUnsavedChanges, lastSaveTime, autoSaveEnabled } = useData();
 
-        const handleSave = async () => {
-            setIsSaving(true);
-            await saveData();
-            setIsSaving(false);
-        };
-
-        if (!hasUnsavedChanges) return null;
+        if (!hasUnsavedChanges) {
+            return lastSaveTime ? (
+                <div className="fixed bottom-6 left-6 z-40">
+                    <div className="bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2">
+                        <i className="fas fa-check"></i>
+                        <span>آخر حفظ: {lastSaveTime.toLocaleTimeString()}</span>
+                    </div>
+                </div>
+            ) : null;
+        }
 
         return (
             <div className="fixed bottom-6 left-6 z-40">
                 <button
-                    onClick={handleSave}
-                    disabled={isSaving}
-                    className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-2 transition-all disabled:opacity-50"
+                    onClick={saveData}
+                    className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-2 transition-all"
                 >
-                    <i className={`fas ${isSaving ? 'fa-spinner fa-spin' : 'fa-save'}`}></i>
-                    {isSaving ? 'جاري الحفظ...' : `حفظ ${section}`}
+                    <i className="fas fa-save"></i>
+                    {autoSaveEnabled ? `جاري الحفظ التلقائي...` : `حفظ ${section}`}
                 </button>
             </div>
         );
@@ -865,7 +930,10 @@
             isSignedInToGoogle,
             handleGoogleSignIn,
             handleGoogleSignOut,
-            isSyncReady
+            isSyncReady,
+            canSyncWithDrive,
+            autoSaveEnabled,
+            toggleAutoSave
         } = useData();
 
         if (!isSyncReady) {
@@ -877,7 +945,7 @@
             );
         }
         
-        if (!isSignedInToGoogle) {
+        if (!isSignedInToGoogle && canSyncWithDrive) {
             return (
                 <button 
                     onClick={handleGoogleSignIn} 
@@ -886,6 +954,15 @@
                     <i className="fab fa-google-drive"></i>
                     <span>مزامنة مع Drive</span>
                 </button>
+            );
+        }
+        
+        if (!canSyncWithDrive) {
+            return (
+                <div className={`flex items-center gap-2 text-sm font-semibold text-slate-400 ${isMobile ? 'w-full justify-center' : ''}`}>
+                    <i className="fas fa-cloud"></i>
+                    <span>مزامنة محلية فقط</span>
+                </div>
             );
         }
         
@@ -919,6 +996,17 @@
 
         return (
             <div className={`flex items-center gap-3 ${isMobile ? 'w-full' : ''}`}>
+                <button 
+                    onClick={toggleAutoSave}
+                    className={`text-xs px-2 py-1 rounded transition-colors ${
+                        autoSaveEnabled 
+                            ? 'bg-green-500 text-white hover:bg-green-600' 
+                            : 'bg-slate-300 text-slate-600 hover:bg-slate-400'
+                    }`}
+                    title={autoSaveEnabled ? 'تعطيل الحفظ التلقائي' : 'تفعيل الحفظ التلقائي'}
+                >
+                    <i className={`fas ${autoSaveEnabled ? 'fa-toggle-on' : 'fa-toggle-off'}`}></i>
+                </button>
                 <div className={`flex items-center gap-2 ${statusColor} text-sm font-semibold`}>
                     <i className={statusIcon}></i>
                     <span>{statusText}</span>
@@ -965,7 +1053,7 @@
     };
 
     const Layout = ({children, activeSection, setActiveSection}) => {
-        const { userRole, logout } = useAuth();
+        const { userRole, logout, userData } = useAuth();
         const { resetToInitialData } = useData();
         const [isMobileNavOpen, setMobileNavOpen] = useState(false);
         const [isPasswordModalOpen, setPasswordModalOpen] = useState(false);
@@ -1004,7 +1092,7 @@
 
                         <div className="flex items-center gap-4">
                             <div className="hidden xl:flex items-center gap-4">
-                                {userRole === 'admin' && <GoogleSyncButton />}
+                                <GoogleSyncButton />
                                 <div className="flex items-center gap-2 bg-white/10 px-3 py-2 rounded-lg">
                                     <i className="fas fa-user-circle text-blue-400 text-xl"></i>
                                     <span className="font-semibold text-sm">{userRole ? roleText[userRole] : ''}</span>
@@ -1044,7 +1132,7 @@
                         </ul>
                     </nav>
                     <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-white/10 flex flex-col gap-3">
-                        {userRole === 'admin' && <GoogleSyncButton isMobile={true} />}
+                        <GoogleSyncButton isMobile={true} />
                         <div className="flex items-center gap-2 bg-white/10 px-3 py-2 rounded-lg text-sm text-white">
                                 <i className="fas fa-user-circle text-blue-400 text-xl"></i>
                                 <span className="font-semibold">{userRole ? roleText[userRole] : ''}</span>
@@ -1836,7 +1924,7 @@
     // --- From sections/Columns.tsx ---
     const PoleItem = ({ pole, onUpdate, onDelete }) => {
         const { userRole } = useAuth();
-        const canEdit = userRole === 'admin' || userRole === 'follower';
+        const canEdit = userRole === 'admin' || userRole === 'follower' || userRole === 'teamLeader';
         const isAdmin = userRole === 'admin';
 
         const [localPole, setLocalPole] = useState(pole);
@@ -2179,11 +2267,6 @@
     if (!rootElement) {
         throw new Error("Could not find root element to mount to");
     }
-
-    console.log('Google APIs Status:', {
-        gapi: window.gapi ? 'Available' : 'Not Available',
-        google: window.google ? 'Available' : 'Not Available'
-    });
 
     window.addEventListener('error', (event) => {
         console.error('Global error:', event.error);

@@ -250,14 +250,14 @@
 
     // --- Firebase Configuration ---
     const FIREBASE_CONFIG = {
-     apiKey: "AIzaSyCUuyJB3dI1R2keBFB34epgZz7_ELDPHQs",
-     authDomain: "smart-age-services-42aa2.firebaseapp.com",
-     databaseURL: "https://smart-age-services-42aa2-default-rtdb.firebaseio.com", // مهم: أضف هذا السطر
-     projectId: "smart-age-services-42aa2",
-     storageBucket: "smart-age-services-42aa2.firebasestorage.app",
-     messagingSenderId: "845608614683",
-     appId: "1:845608614683:web:37deeb7c45bad45113f1be",
-     measurementId: "G-G2DCJEMXWB"
+      apiKey: "AIzaSyCUuyJB3dI1R2keBFB34epgZz7_ELDPHQs",
+      authDomain: "smart-age-services-42aa2.firebaseapp.com",
+      databaseURL: "https://smart-age-services-42aa2-default-rtdb.firebaseio.com",
+      projectId: "smart-age-services-42aa2",
+      storageBucket: "smart-age-services-42aa2.firebasestorage.app",
+      messagingSenderId: "845608614683",
+      appId: "1:845608614683:web:37deeb7c45bad45113f1be",
+      measurementId: "G-G2DCJEMXWB"
     };
 
     // --- From contexts/AuthContext.tsx ---
@@ -416,10 +416,12 @@
                 setLastSyncTime(new Date());
                 setHasUnsavedChanges(false);
                 setLastSaveTime(new Date());
+                showToast('تم حفظ البيانات في السحابة بنجاح!', 'success');
                 return true;
             } catch (error) {
                 console.error("Error saving data to Firebase:", error);
                 setSyncStatus('ERROR');
+                showToast('فشل حفظ البيانات في السحابة.', 'error');
                 return false;
             }
         }, [firebaseInitialized, isConnectedToFirebase]);
@@ -434,11 +436,6 @@
         const saveData = useCallback(async () => {
             if (canSyncWithFirebase && isConnectedToFirebase) {
                 const success = await saveDataToFirebase(data);
-                if (success) {
-                    showToast('تم حفظ البيانات بنجاح في السحابة!', 'success');
-                } else {
-                    showToast('فشل حفظ البيانات في السحابة.', 'error');
-                }
                 return success;
             } else {
                 saveDataLocally();
@@ -496,6 +493,7 @@
                 } else {
                     // إذا لم تكن هناك بيانات في Firebase، احفظ البيانات الابتدائية
                     await saveDataToFirebase(INITIAL_DATA);
+                    showToast('تم إنشاء بيانات جديدة في السحابة', 'info');
                 }
             } catch (error) {
                 console.error("Error loading data from Firebase:", error);

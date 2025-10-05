@@ -43,79 +43,16 @@
       .text-shadow-lg {
         text-shadow: 0 4px 8px rgba(0,0,0,0.7);
       }
-      
-      /* تأثيرات تفاعلية جديدة */
-      .hover-lift {
-        transition: all 0.3s ease;
-      }
-      .hover-lift:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-      }
-      
-      .hover-glow:hover {
-        box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
-      }
-      
-      .hover-scale {
-        transition: transform 0.3s ease;
-      }
-      .hover-scale:hover {
-        transform: scale(1.05);
-      }
-      
-      .btn-interactive {
-        transition: all 0.3s ease;
-        position: relative;
-        overflow: hidden;
-      }
-      .btn-interactive:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 7px 14px rgba(50, 50, 93, 0.1), 0 3px 6px rgba(0, 0, 0, 0.08);
-      }
-      .btn-interactive:active {
-        transform: translateY(1px);
-      }
-      
-      .card-interactive {
-        transition: all 0.3s ease;
-        cursor: pointer;
-      }
-      .card-interactive:hover {
-        transform: translateY(-8px);
-        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-      }
-      
-      .nav-link-interactive {
-        transition: all 0.3s ease;
-        position: relative;
-      }
-      .nav-link-interactive:hover {
-        background-color: rgba(255, 255, 255, 0.15);
-        transform: translateX(-5px);
-      }
-      
-      .image-zoom-container {
-        overflow: hidden;
-        border-radius: 0.5rem;
-      }
-      .image-zoom {
-        transition: transform 0.5s ease;
-      }
-      .image-zoom:hover {
-        transform: scale(1.1);
-      }
     </style>
     
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
 </head>
 <body>
+  <script src="https://apis.google.com/js/api.js"></script>
+  <script async defer src="https://accounts.google.com/gsi/client"></script>
+
   <div id="root"></div>
   <script type="text/babel">
     const { useState, useEffect, createContext, useContext, useCallback, useRef } = React;
@@ -197,17 +134,199 @@
         routers: [
           {
             name: "راوتر TP-link BE3000 Wifi 7",
-            price: "السعر : 90.000 د.ع",
-            image: "https://dc585.4shared.com/img/5YBFGXfZfa/s24/1993358aed0/_TP-link_BE3000_Wifi_7?async&rand=0.8962375215610101",
-            specs: [
-              "Wifi : الجيل السابع (الاحدث والاسرع) (Wifi 7)",
-              "التغطية: ممتازة للمنازل المتوسطة إلى الكبيرة مع 4 هوائيات خارجية قوية",
-              "السرعة: السرعة سلكياً : منفذ WAN بسرعة 2.5G و4 منافذ LAN المنفذ الأول بسرعة 2.5G والمنافذ الثلاث الباقية بسرعة 1G || السرعة الاسلكية : تصل تقريباً 3000Mbps  (574Mbps على 2.4GHz و2402Mbps على 5GHz).",
-              "تحمّل الأجهزة: يدعم MU-MIMO، Beamforming وWPA3، لتوزيع أفضل للإشارة على أجهزة متعددة وتقليل التداخل.",
-              " للألعاب والبث: أداء فائق جدًا للبث بدقة 4K وألعاب أونلاين بدون لاكَ أو تقطيع بفضل خاصية MOL و OFDMA ."
+                price: "السعر : 90.000 د.ع",
+                image: "https://dc585.4shared.com/img/5YBFGXfZfa/s24/1993358aed0/_TP-link_BE3000_Wifi_7?async&rand=0.8962375215610101",
+                specs: [
+                  "Wifi : الجيل السابع (الاحدث والاسرع) (Wifi 7)",
+                  "التغطية: ممتازة للمنازل المتوسطة إلى الكبيرة مع 4 هوائيات خارجية قوية",
+                  "السرعة: السرعة سلكياً : منفذ WAN بسرعة 2.5G و4 منافذ LAN المنفذ الأول بسرعة 2.5G والمنافذ الثلاث الباقية بسرعة 1G || السرعة الاسلكية : تصل تقريباً 3000Mbps  (574Mbps على 2.4GHz و2402Mbps على 5GHz).",
+                  "تحمّل الأجهزة: يدعم MU-MIMO، Beamforming وWPA3، لتوزيع أفضل للإشارة على أجهزة متعددة وتقليل التداخل.",
+                  " للألعاب والبث: أداء فائق جدًا للبث بدقة 4K وألعاب أونلاين بدون لاكَ أو تقطيع بفضل خاصية MOL و OFDMA ."
+                ],
+              },
+              {
+                name: "راوتر TP-link Deco S7",
+                price:
+                  "السعر : قطعة 65.000 د.ع | قطعتين 110.000 د.ع | ثلاث قطع 145.000 د.ع",
+                image: "https://dc585.4shared.com/img/XYozqoe_jq/s24/1993358b6a0/_TP-link_Deco_S7?async&rand=0.8223692191470852",
+                specs: [
+                  "Wifi : الجيل الخامس (Wifi 5)",
+                  "تغطية شاملة بتقنية (Mesh): يغطي حتى 560م² بدون انقطاع",
+                  "ثنائي التردد : (2.4GHz + 5GHz ) بسرعة تصل إلى 1300Mbps.",
+                  "منافذ LAN : لكل قطعة يوجد ثلاث منافذ LAN",
+                  "تحكم بالتطبيق  : إدارة الشبكة بسهولة عبر تطبيق Deco.",
+                ],
+              },
+              {
+                name: "راوتر TP-Link Deco M4",
+                price:
+                  "السعر : قطعة 55.000 د.ع | قطعتين 90.000 د.ع | ثلاث قطع 125.000 د.ع",
+                image: "https://dc585.4shared.com/img/X3lRHTyZjq/s24/1993358b2b8/_TP-Link_Deco_M4?async&rand=0.9128571211823272",
+                specs: [
+                  "Wifi : الجيل الخامس (Wifi 5)",
+                  "تغطية قوية (Mesh) : يغطي حتى 370م².",
+                  "ثنائي التردد :  يدعم 2.4GHz و5GHz بسرعة تصل إلى 1200Mbps.",
+                  "منافذ LAN : لكل قطعة يوجد منفذين LAN",
+                  "تحكم بالتطبيق : إعداد ومراقبة الشبكة بسهولة من تطبيق Deco.",
+                ],
+              },
+              {
+                name: "راوتر TP-link Deco E4",
+                price:
+                  "السعر : قطعة 45.000 د.ع | قطعتين بـ100.000 د.ع | ثلاث قطع بـ130.000 د.ع",
+                image: "https://dc585.4shared.com/img/ljxx5Vtzjq/s24/19933632680/_TP-link_Deco_E4?async&rand=0.7669479841988558",
+                specs: [
+                  "Wifi : الجيل الخامس (Wifi 5)",
+                  "نظام (Mesh) بتغطية ممتازة : يغطي حتى 370م²",
+                  "ثنائي التردد : (2.4GHz  و 5GHz ) بسرعة تصل إلى 1200Mbps.",
+                  "اداء ثابت : مناسب للاستخدام اليومي الكثيف (جيد في الالعاب والبث المباشر لكن ليس بكثافة, الفئات الاعلى افضل)",
+                  "تحكم بالتطبيق : إعداد ومراقبة الشبكة بسهولة من تطبيق Deco.",
+                ],
+              },
+              {
+                name: "راوتر شاومي xiaomi ax3200",
+                price: "السعر : 90.000 د.ع",
+                image: "https://dc585.4shared.com/img/plKVjZznjq/s24/19933633238/__xiaomi_ax3200?async&rand=0.19568147404337743",
+                specs: [
+                  "Wifi : الجيل السادس (Wifi 6)",
+                  "معالج قوي : سرعة وأداء أعلى، استقرار أفضل للشبكة.",
+                  "ثنائي التردد : (2.4GHz + 5GHz ) بسرعة إجمالية تصل إلى (3202Mbps.)",
+                  "5 منافذ LAN : منفذ WAN و 4 منافذ LAN جميعها تدعم سرعة 1G",
+                  "استقرارية وثبات : مناسب جدًا للألعاب، البث المباشر بدقة 4K، والتصفح الكثيف.",
+                ],
+              },
+              {
+                name: "راوتر ريدمي Redmi AX3000",
+                price: "85,000 د.ع",
+                image: "https://dc585.4shared.com/img/ZfuBiVenfa/s24/19933632e50/__Redmi_AX3000?async&rand=0.1362688746152375",
+                specs: [
+                  "Wifi : الجيل السادس (Wifi 6)",
+                  "التغطية: ممتازة للمنازل المتوسطة إلى الكبيرة مع 4 هوائيات خارجية قوية",
+                  "السرعة: بسرعة تصل إلى 2976Mbps (574Mbps على 2.4GHz و2402Mbps على 5GHz).",
+                  "تحمّل الأجهزة: يدعم عدد كبير من الأجهزة بكفاءة عالية.",
+                  " للألعاب والبث: أداء رائع جدًا للبث بدقة 4K وألعاب أونلاين بدون لاكَ أو تقطيع.",
+                ],
+              },
+              {
+                name: "راوتر TP-link AX55 (ax3000)",
+                price: "80.000 د.ع",
+                image: "https://dc585.4shared.com/img/FMayj6t9jq/s24/1993365e5a0/_TP-link_AX55__ax3000_?async&rand=0.9390551562772579",
+                specs: [
+                  "Wifi : الجيل السادس (Wifi 6)",
+                  "التغطية: يغطي منازل متوسطة إلى كبيرة و4 هوائيات قوية.",
+                  "السرعة: بسرعة تصل 2976Mbps (574Mbps على 2.4GHz و2402Mbps على 5GHz).",
+                  "تحمّل الأجهزة: يدعم عشرات الأجهزة بفضل MU-MIMO وOFDMA بدون تقطيع.",
+                  "للألعاب والبث: أداء ممتاز لألعاب الأونلاين والبث بدقة 4K بدون تأخير.",
+                ],
+              },
+              {
+                name: "راوتر TP-link AX53 (نسخة محدثة)",
+                price: "70.000 د.ع",
+                image: "https://dc585.4shared.com/img/TKl_5ODPfa/s24/1993365ddd0/_TP-link_AX53____?async&rand=0.07900306585092631",
+                specs: [
+                  "Wifi : الجيل السادس (Wifi 6)",
+                  "التغطية: تغطية ممتازة للمنازل المتوسطة بفضل 4 هوائيات.",
+                  "السرعة: بسرعة تصل 2976Mbps (574Mbps على 2.4GHz و2402Mbps على 5GHz).",
+                  "تحمّل الأجهزة: يدعم أجهزة كثيرة في نفس الوقت بكفاءة عالية بفضل MU-MIMO وOFDMA.",
+                  "للألعاب والبث: أداء قوي جدًا للألعاب والبث بدقة 4K مع تأخير شبه معدوم.",
+                ],
+              },
+              {
+                name: "راوتر ريدمي Redmi AC2100",
+                price: "75,000 د.ع",
+                image: "https://dc585.4shared.com/img/QJDOy9hXku/s24/1993365ed70/__Redmi_AC2100?async&rand=0.6073232769809835",
+                specs: [
+                  "Wifi : الجيل الخامس (Wifi 5)",
+                  "التغطية: تغطي مساحة متوسطة إلى كبيرة بفضل 6 هوائيات خارجية قوية.",
+                  "السرعة: يدعم AC2100 بسرعة تصل إلى 2033Mbps (ممتاز للتصفح السريع).",
+                  "الألعاب والبث المباشر: يقدم أداء ثابت نسبيًا، لكن فيه تأخير بسيط مقارنة براوترات Wi-Fi 6.",
+                  " تحمل الأجهزة: يدعم عدد كبير من الاجهزة المتصلة بفضل MU-MIMO وتقنيات التوجيه الذكي.",
+                ],
+              },
+              {
+                name: "راوتر TP-link AX23 (ax1800)",
+                price: "75.000 د.ع",
+                image: "https://dc585.4shared.com/img/th9DmvfUjq/s24/19933685a88/_TP-link_AX23__ax1800_?async&rand=0.5695889445130268",
+                specs: [
+                  "Wifi : الجيل السادس (Wifi 6)",
+                  "التغطية: ممتاز للمنازل المتوسطة بفضل 4 هوائيات قوية.",
+                  "السرعة: Wi-Fi 6 بسرعة إجمالية تصل إلى 1775Mbps (574Mbps على 2.4GHz و1201Mbps على 5GHz).",
+                  "تحمّل الأجهزة: يدعم أجهزة متعددة بكفاءة عالية",
+                  "للألعاب والبث: يقدم أداء ثابت ومناسب للألعاب المتوسطة والبث بدقة 4K.",
+                ],
+              },
+              {
+                name: "راوتر TP-link AX1500",
+                price: "55,000 د.ع",
+                image: "https://dc585.4shared.com/img/YRaKf6w8jq/s24/19933685e70/_TP-link_AX1500?async&rand=0.6163704558497021",
+                specs: [
+                  "Wifi : الجيل السادس (Wifi 6)",
+                  "التغطية: مناسب للمنازل الصغيرة إلى المتوسطة مع 4 هوائيات قوية",
+                  "السرعة: Wi-Fi 6 بسرعة إجمالية تصل إلى 1500Mbps (300Mbps على 2.4GHz و1201Mbps على 5GHz).",
+                  "تحمّل الأجهزة: يدعم أجهزة متعددة بكفاءة",
+                  "للألعاب والبث: أداء جيد جدًا للبث بدقة Full HD وألعاب أونلاين خفيفة بدون تقطيع.",
+                ],
+              },
+              {
+                name: "راوتر شاومي Xiaomi 4A",
+                price: "35,000 د.ع",
+                image: "https://dc585.4shared.com/img/nB9zrvuVfa/s24/19933686258/__Xiaomi_4A?async&rand=0.14237064281442136",
+                specs: [
+                  "Wifi : الجيل الخامس (Wifi 5)",
+                  "التغطية: مناسب للمنازل الصغيرة إلى المتوسطة مع 4 هوائيات خارجية قوية.",
+                  "السرعة: ثنائي التردد (Dual-Band) بسرعة إجمالية تصل إلى 1167Mbps (300Mbps على 2.4GHz و867Mbps على 5GHz).",
+                  "تحمّل الأجهزة: يدعم عدد جيد من الاجهزة المتصلة في نفس الوقت مع أداء مستقر.",
+                  "للألعاب والبث: ممتاز للبث بدقة Full HD وتصفح سريع، مناسب للألعاب الخفيفة",
+                ],
+              },
+              {
+                name: "راوتر TP-link ac1200",
+                price: "45,000 د.ع",
+                image: "https://dc615.4shared.com/img/f2Bn4mbPku/s24/199336852b8/_TP-link_ac1200?async&rand=0.009242699491749606",
+                specs: [
+                  "Wifi : الجيل الخامس (Wifi 5)",
+                  "التغطية: مناسب للشقق أو منازل صغيرة بفضل 4 هوائيات",
+                  "السرعة: يدعم AC1200 (300Mbps على 2.4GHz و867Mbps على 5GHz).",
+                  "تحمّل الأجهزة: يتحمّل عدد جيد من الأجهزة المنزلية لكن مو مثالي للشبكات الثقيلة.",
+                  "للألعاب والبث: مناسب للتصفح والبث بدقة Full HD، لكن مو مخصص للألعاب الثقيلة.",
+                ],
+              },
             ],
-          },
-        ],
+            onu: [
+              {
+                name: "جهاز ONU Huawei 1G",
+                price: "15.000 د.ع",
+                image: "https://dc585.4shared.com/img/fdTsdHYRjq/s24/199336b2d30/_ONU_Huawei_1G?async&rand=0.9011337280636843",
+                specs: [
+                  "دعم XPON/GPON",
+                  "2 منافذ LAN",
+                  "منافذ LAN تعدم سرعة تصل إلى 1 جيجابت/ثانية",
+                  "دعم IPv6",
+                ],
+              },
+              {
+                name: "جهاز ONU Huawei 100M",
+                price: "10.000 د.ع",
+                image: "https://dc585.4shared.com/img/vF5skKIDku/s24/199336b3500/_ONU_Huawei_100M?async&rand=0.9403216328137985",
+                specs: [
+                  "دعم GPON",
+                  "4 منافذ LAN",
+                  "2 منافذ VoIP",
+                  "منافذ LAN تدعم سرعة تصل إلى 100 ميجابت/ثانية",
+                ],
+              },
+              {
+                name: "جهاز ONU Tenda 1G",
+                price: "10.000 د.ع",
+                image: "https://dc585.4shared.com/img/ToLfgtVmge/s24/199336b38e8/_ONU_Tenda_1G?async&rand=0.53498482793742",
+                specs: [
+                  "دعم XPON",
+                  "منفذ LAN واحد",
+                  "منفذ LAN يدعم سرعة تصل الى 1 جيجابت/ثانية",
+                  "دعم IPv6",
+                ],
+              },
+            ],
         onu: [],
         ont: [],
         other: [],
@@ -246,18 +365,6 @@
         { name: 'ستيكر وطني (الاولى والثانية والثالثة والبستان وربيع ودباش)', thumb: 'https://dc730.4shared.com/img/NBIC_b16ku/s24/1993374b2b0/_________?async&rand=0.7303803786917789' },
         { name: 'ستيكر جكوك والدولعي', thumb: 'https://dc730.4shared.com/img/2N4HIxMtjq/s24/1993374aec8/___online?async&rand=0.550228095590632' }
       ]
-    };
-
-    // --- Firebase Configuration ---
-    const FIREBASE_CONFIG = {
-      apiKey: "AIzaSyCUuyJB3dI1R2keBFB34epgZz7_ELDPHQs",
-      authDomain: "smart-age-services-42aa2.firebaseapp.com",
-      databaseURL: "https://smart-age-services-42aa2-default-rtdb.firebaseio.com",
-      projectId: "smart-age-services-42aa2",
-      storageBucket: "smart-age-services-42aa2.firebasestorage.app",
-      messagingSenderId: "845608614683",
-      appId: "1:845608614683:web:37deeb7c45bad45113f1be",
-      measurementId: "G-G2DCJEMXWB"
     };
 
     // --- From contexts/AuthContext.tsx ---
@@ -344,6 +451,12 @@
     };
 
     // --- From contexts/DataContext.tsx ---
+    const GOOGLE_API_KEY = 'AIzaSyB5TMzgkDBU07opyyGA9wdhSRFIF4i2rTQ';
+    const GOOGLE_CLIENT_ID = '502160644631-n19a9vdr85v34m35kllt0un00u9fcg44.apps.googleusercontent.com';
+    const SCOPES = 'https://www.googleapis.com/auth/drive.file';
+    const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest';
+    const FILE_NAME = 'smartAgeSiteData.json';
+
     const DataContext = createContext(undefined);
 
     const DataProvider = ({ children }) => {
@@ -352,152 +465,125 @@
         const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
         const [lastSaveTime, setLastSaveTime] = useState(null);
         
-        const [firebaseInitialized, setFirebaseInitialized] = useState(false);
-        const [isConnectedToFirebase, setIsConnectedToFirebase] = useState(false);
+        const [gapiInitialized, setGapiInitialized] = useState(false);
+        const [gisInitialized, setGisInitialized] = useState(false);
+        const [isSignedInToGoogle, setIsSignedInToGoogle] = useState(false);
+        const [driveFileId, setDriveFileId] = useState(null);
         const [syncStatus, setSyncStatus] = useState('UNINITIALIZED');
         const [lastSyncTime, setLastSyncTime] = useState(null);
         const [autoSaveEnabled, setAutoSaveEnabled] = useState(true);
-        const [isLoading, setIsLoading] = useState(true);
         
-        const canWriteToFirebase = userRole === 'admin'; // الكتابة فقط للمسؤول
-        const canReadFromFirebase = !!userRole; // القراءة لجميع المستخدمين المسجلين
+        const isSyncReady = gapiInitialized && gisInitialized;
+        const canSyncWithDrive = userRole === 'admin'; // تم التعديل: المزامنة فقط للمسؤول
 
-        // تهيئة Firebase
+        // حفظ البيانات تلقائياً عند التغيير
         useEffect(() => {
-            try {
-                if (window.firebase) {
-                    window.firebase.initializeApp(FIREBASE_CONFIG);
-                    setFirebaseInitialized(true);
-                    
-                    // مراقبة حالة الاتصال
-                    const db = window.firebase.database();
-                    const connectedRef = db.ref(".info/connected");
-                    connectedRef.on("value", (snap) => {
-                        setIsConnectedToFirebase(snap.val() === true);
-                    });
-                    
-                } else {
-                    console.error("Firebase SDK not loaded");
-                }
-            } catch (error) {
-                console.error("Error initializing Firebase:", error);
-            }
-        }, []);
-
-        // الاستماع للتحديثات الفورية من Firebase لجميع المستخدمين
-        useEffect(() => {
-            if (!firebaseInitialized || !canReadFromFirebase) return;
-
-            setSyncStatus('SYNCING');
-            setIsLoading(true);
-            
-            try {
-                const db = window.firebase.database();
-                const siteDataRef = db.ref('siteData');
-                
-                // الاستماع للتحديثات الفورية
-                siteDataRef.on('value', (snapshot) => {
-                    const firebaseData = snapshot.val();
-                    
-                    if (firebaseData) {
-                        setData(firebaseData);
-                        setSyncStatus('SYNCED');
-                        setLastSyncTime(new Date());
-                        setHasUnsavedChanges(false);
-                        setIsLoading(false);
-                        
-                        // عرض إشعار بالتحديثات الجديدة (باستثناء التحميل الأول)
-                        if (lastSyncTime) {
-                            showToast('تم تحديث البيانات بأحدث التغييرات', 'info');
-                        }
-                    } else {
-                        // إذا لم تكن هناك بيانات في Firebase، استخدم البيانات الابتدائية
-                        setData(INITIAL_DATA);
-                        setSyncStatus('SYNCED');
-                        setLastSyncTime(new Date());
-                        setHasUnsavedChanges(false);
-                        setIsLoading(false);
-                        
-                        // إذا كان المستخدم مسؤولاً، يمكنه إنشاء البيانات الابتدائية
-                        if (canWriteToFirebase) {
-                            showToast('لا توجد بيانات في السحابة، يمكنك إنشاء بيانات جديدة', 'info');
-                        }
-                    }
-                }, (error) => {
-                    console.error("Error listening to Firebase:", error);
-                    setSyncStatus('ERROR');
-                    setIsLoading(false);
-                    showToast('فشل الاتصال بالسحابة', 'error');
-                });
-                
-            } catch (error) {
-                console.error("Error setting up Firebase listener:", error);
-                setSyncStatus('ERROR');
-                setIsLoading(false);
-            }
-
-            // تنظيف الـ listener عند إلغاء التثبيت
-            return () => {
-                if (window.firebase) {
-                    const db = window.firebase.database();
-                    db.ref('siteData').off();
-                }
-            };
-        }, [firebaseInitialized, canReadFromFirebase]);
-
-        // حفظ البيانات تلقائياً عند التغيير (للمسؤول فقط)
-        useEffect(() => {
-            if (hasUnsavedChanges && autoSaveEnabled && canWriteToFirebase) {
+            if (hasUnsavedChanges && autoSaveEnabled) {
                 const autoSaveTimer = setTimeout(() => {
-                    if (isConnectedToFirebase) {
-                        saveDataToFirebase(data);
+                    if (canSyncWithDrive && isSignedInToGoogle) {
+                        saveDataToDrive(data);
+                    } else {
+                        saveDataLocally();
                     }
-                }, 2000);
+                }, 2000); // حفظ تلقائي بعد ثانيتين من التغيير
 
                 return () => clearTimeout(autoSaveTimer);
             }
-        }, [hasUnsavedChanges, data, autoSaveEnabled, canWriteToFirebase, isConnectedToFirebase]);
+        }, [hasUnsavedChanges, data, autoSaveEnabled]);
 
-        const saveDataToFirebase = useCallback(async (dataToSave) => {
-            if (!firebaseInitialized || !isConnectedToFirebase) {
-                console.error('Firebase not initialized or not connected');
-                showToast('لا يمكن الحفظ بسبب عدم الاتصال بالسحابة', 'error');
-                return false;
+        // محاولة التسجيل التلقائي مع Google Drive عند تحميل التطبيق
+        useEffect(() => {
+            if (userData && canSyncWithDrive && isSyncReady) {
+                const attemptAutoSignIn = async () => {
+                    try {
+                        const token = localStorage.getItem('googleDriveToken');
+                        if (token) {
+                            window.gapi.client.setToken({ access_token: token });
+                            setIsSignedInToGoogle(true);
+                            const fileId = await findOrCreateFile();
+                            if (fileId) {
+                                setDriveFileId(fileId);
+                                await loadDataFromDrive(fileId);
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Auto sign-in failed:', error);
+                        localStorage.removeItem('googleDriveToken');
+                    }
+                };
+                attemptAutoSignIn();
             }
-            
-            if (!canWriteToFirebase) {
-                showToast('ليس لديك صلاحية لحفظ البيانات', 'error');
+        }, [userData, isSyncReady]);
+
+        const saveDataToDrive = useCallback(async (dataToSave) => {
+            if (!driveFileId) {
+                console.error('No file ID available for saving');
                 return false;
             }
             
             setSyncStatus('SYNCING');
             try {
-                const db = window.firebase.database();
-                await db.ref('siteData').set(dataToSave);
+                const dataString = JSON.stringify(dataToSave, null, 2);
+                
+                const response = await window.gapi.client.request({
+                    path: `/upload/drive/v3/files/${driveFileId}`,
+                    method: 'PATCH',
+                    params: { 
+                        uploadType: 'media',
+                        fields: 'id, modifiedTime'
+                    },
+                    body: dataString
+                });
                 
                 setSyncStatus('SYNCED');
                 setLastSyncTime(new Date());
                 setHasUnsavedChanges(false);
                 setLastSaveTime(new Date());
-                showToast('تم حفظ البيانات في السحابة بنجاح!', 'success');
                 return true;
             } catch (error) {
-                console.error("Error saving data to Firebase:", error);
+                console.error("Error saving data to Drive:", error);
+                
+                if (error.result && error.result.error) {
+                    if (error.result.error.code === 403) {
+                        showToast('ليس لديك صلاحية الكتابة إلى الملف', 'error');
+                    } else if (error.result.error.code === 404) {
+                        showToast('ملف البيانات غير موجود', 'error');
+                        setDriveFileId(null);
+                    } else if (error.result.error.code === 401) {
+                        // Token منتهي الصلاحية
+                        localStorage.removeItem('googleDriveToken');
+                        setIsSignedInToGoogle(false);
+                        showToast('انتهت جلسة العمل، يرجى إعادة التسجيل', 'error');
+                    }
+                }
+                
                 setSyncStatus('ERROR');
-                showToast('فشل حفظ البيانات في السحابة.', 'error');
                 return false;
             }
-        }, [firebaseInitialized, isConnectedToFirebase, canWriteToFirebase]);
+        }, [driveFileId]);
+
+        const saveDataLocally = useCallback(() => {
+            localStorage.setItem('smartAgeLocalData', JSON.stringify(data));
+            setHasUnsavedChanges(false);
+            setLastSaveTime(new Date());
+            return true;
+        }, [data]);
 
         const saveData = useCallback(async () => {
-            if (canWriteToFirebase && isConnectedToFirebase) {
-                const success = await saveDataToFirebase(data);
+            if (canSyncWithDrive && isSignedInToGoogle) {
+                const success = await saveDataToDrive(data);
+                if (success) {
+                    showToast('تم حفظ البيانات بنجاح في Google Drive!', 'success');
+                } else {
+                    showToast('فشل حفظ البيانات في Google Drive.', 'error');
+                }
                 return success;
             } else {
-                showToast('لا يمكن الحفظ بسبب عدم الاتصال أو عدم وجود صلاحية', 'error');
-                return false;
+                saveDataLocally();
+                showToast('تم حفظ البيانات محلياً بنجاح!', 'success');
+                return true;
             }
-        }, [canWriteToFirebase, isConnectedToFirebase, data, saveDataToFirebase]);
+        }, [canSyncWithDrive, isSignedInToGoogle, data, saveDataToDrive, saveDataLocally]);
 
         const updateData = useCallback((newData) => {
             setData(newData);
@@ -518,7 +604,225 @@
             setHasUnsavedChanges(true);
         }, []);
 
-        // إعادة تعيين البيانات إلى القيم الافتراضية (للمسؤول فقط)
+        // تحميل البيانات المحلية عند البدء
+        useEffect(() => {
+            const localData = localStorage.getItem('smartAgeLocalData');
+            if (localData) {
+                try {
+                    setData(JSON.parse(localData));
+                } catch (e) {
+                    console.error("Error loading local data:", e);
+                }
+            }
+        }, []);
+
+        // تهيئة Google APIs
+        useEffect(() => {
+            const initializeGapi = () => {
+                if (window.gapi) {
+                    window.gapi.load('client', async () => {
+                        try {
+                            await window.gapi.client.init({
+                                apiKey: GOOGLE_API_KEY,
+                                discoveryDocs: [DISCOVERY_DOC],
+                            });
+                            setGapiInitialized(true);
+                        } catch (error) {
+                            console.error('Error initializing gapi:', error);
+                            setSyncStatus('ERROR');
+                        }
+                    });
+                } else {
+                    setTimeout(initializeGapi, 100);
+                }
+            };
+
+            const initializeGis = () => {
+                if (window.google) {
+                    setGisInitialized(true);
+                } else {
+                    setTimeout(initializeGis, 100);
+                }
+            };
+
+            initializeGapi();
+            initializeGis();
+        }, []);
+
+        const findOrCreateFile = useCallback(async () => {
+            try {
+                const response = await window.gapi.client.drive.files.list({
+                    q: `name='${FILE_NAME}' and trashed=false`,
+                    fields: 'files(id, name, createdTime, modifiedTime)',
+                    spaces: 'drive'
+                });
+
+                if (response.result.files.length > 0) {
+                    const file = response.result.files[0];
+                    return file.id;
+                } else {
+                    if (!canSyncWithDrive) {
+                        showToast('ملف البيانات غير موجود. يرجى طلب من المسؤول تسجيل الدخول أولاً لإنشائه.', 'error');
+                        return null;
+                    }
+                    
+                    const createResponse = await window.gapi.client.drive.files.create({
+                        resource: { 
+                            name: FILE_NAME, 
+                            mimeType: 'application/json',
+                            parents: ['root']
+                        },
+                        fields: 'id, name'
+                    });
+                    
+                    const fileId = createResponse.result.id;
+                    
+                    // حفظ البيانات الابتدائية في الملف الجديد
+                    await saveDataToDrive(INITIAL_DATA);
+                    showToast('تم إنشاء ملف بيانات جديد في Google Drive', 'success');
+                    return fileId;
+                }
+            } catch (err) {
+                console.error("Error finding or creating file:", err);
+                
+                if (err.result && err.result.error) {
+                    if (err.result.error.code === 403) {
+                        showToast('ليس لديك صلاحية إنشاء ملفات في Drive', 'error');
+                    }
+                }
+                
+                setSyncStatus('ERROR');
+                return null;
+            }
+        }, [canSyncWithDrive, saveDataToDrive]);
+
+        const loadDataFromDrive = useCallback(async (fileId) => {
+            if (!fileId) return;
+            setSyncStatus('SYNCING');
+            try {
+                const response = await window.gapi.client.drive.files.get({ 
+                    fileId, 
+                    alt: 'media' 
+                });
+                
+                if (!response.body) {
+                    setData(INITIAL_DATA);
+                    setSyncStatus('SYNCED');
+                    setLastSyncTime(new Date());
+                    setHasUnsavedChanges(false);
+                    showToast('تم تحميل البيانات الافتراضية (الملف كان فارغاً)', 'info');
+                    return;
+                }
+
+                let parsedData;
+                try {
+                    parsedData = JSON.parse(response.body);
+                } catch (parseError) {
+                    console.error('JSON parse error:', parseError);
+                    showToast('خطأ في تنسيق البيانات، تم استخدام البيانات الافتراضية', 'warning');
+                    parsedData = INITIAL_DATA;
+                    await saveDataToDrive(INITIAL_DATA);
+                }
+
+                setData(parsedData);
+                setSyncStatus('SYNCED');
+                setLastSyncTime(new Date());
+                setHasUnsavedChanges(false);
+                showToast('تم تحميل البيانات من Google Drive بنجاح!', 'success');
+            } catch (error) {
+                console.error("Error loading data:", error);
+                
+                if (error.status === 404) {
+                    showToast('ملف البيانات غير موجود في Drive', 'error');
+                } else if (error.status === 403) {
+                    showToast('ليس لديك صلاحية الوصول إلى الملف', 'error');
+                } else if (error.status === 401) {
+                    showToast('انتهت جلسة المصادقة، يرجى إعادة التسجيل', 'error');
+                    handleGoogleSignOut();
+                } else {
+                    showToast('فشل تحميل البيانات من Google Drive.', 'error');
+                }
+                
+                setSyncStatus('ERROR');
+            }
+        }, [saveDataToDrive]);
+
+        const handleGoogleSignOut = useCallback(() => {
+            localStorage.removeItem('googleDriveToken');
+            setIsSignedInToGoogle(false);
+            setDriveFileId(null);
+            setSyncStatus('OFFLINE');
+            showToast('تم تسجيل الخروج من Google Drive.', 'info');
+        }, []);
+
+        const handleGoogleSignIn = useCallback(async () => {
+            if (!isSyncReady) {
+                showToast('خدمات جوجل غير جاهزة بعد. يرجى الانتظار...', 'error');
+                return;
+            }
+
+            if (!canSyncWithDrive) {
+                showToast('ليس لديك صلاحية المزامنة مع Drive', 'error');
+                return;
+            }
+
+            setSyncStatus('AUTHENTICATING');
+            
+            try {
+                const tokenClient = window.google.accounts.oauth2.initTokenClient({
+                    client_id: GOOGLE_CLIENT_ID,
+                    scope: SCOPES,
+                    callback: async (response) => {
+                        if (response.error) {
+                            console.error('Google Sign-In error:', response);
+                            
+                            if (response.error === 'popup_closed_by_user') {
+                                showToast('تم إغلاق نافذة المصادقة', 'info');
+                            } else if (response.error === 'access_denied') {
+                                showToast('تم رفض الوصول من قبل المستخدم', 'error');
+                            } else {
+                                showToast('فشل المصادقة مع Google Drive: ' + response.error, 'error');
+                            }
+                            
+                            setSyncStatus('ERROR');
+                            return;
+                        }
+
+                        try {
+                            // حفظ التوكن للمصادقة التلقائية المستقبلية
+                            localStorage.setItem('googleDriveToken', response.access_token);
+                            
+                            window.gapi.client.setToken({
+                                access_token: response.access_token,
+                                expires_in: response.expires_in
+                            });
+
+                            setIsSignedInToGoogle(true);
+                            const fileId = await findOrCreateFile();
+                            
+                            if (fileId) {
+                                setDriveFileId(fileId);
+                                await loadDataFromDrive(fileId);
+                            } else {
+                                handleGoogleSignOut();
+                            }
+                        } catch (innerError) {
+                            console.error('Error after token callback:', innerError);
+                            setSyncStatus('ERROR');
+                            showToast('حدث خطأ أثناء معالجة الاستجابة', 'error');
+                        }
+                    },
+                });
+
+                tokenClient.requestAccessToken({ prompt: 'consent' });
+            } catch (error) {
+                console.error('Error during Google sign-in:', error);
+                setSyncStatus('ERROR');
+                showToast('حدث خطأ أثناء محاولة المصادقة.', 'error');
+            }
+        }, [isSyncReady, canSyncWithDrive, findOrCreateFile, loadDataFromDrive, handleGoogleSignOut]);
+
+        // إعادة تعيين البيانات إلى القيم الافتراضية
         const resetToInitialData = useCallback(() => {
             if (window.confirm('هل تريد حقاً إعادة تعيين جميع البيانات إلى القيم الافتراضية؟ سيتم فقدان جميع التغييرات غير المحفوظة.')) {
                 setData(INITIAL_DATA);
@@ -543,13 +847,13 @@
                 lastSaveTime,
                 syncStatus, 
                 lastSyncTime, 
-                isConnectedToFirebase, 
-                firebaseInitialized,
+                isSignedInToGoogle, 
+                handleGoogleSignIn, 
+                handleGoogleSignOut, 
+                isSyncReady,
                 autoSaveEnabled,
                 toggleAutoSave,
-                canWriteToFirebase,
-                canReadFromFirebase,
-                isLoading
+                canSyncWithDrive
             }}>
                 {children}
             </DataContext.Provider>
@@ -566,14 +870,12 @@
     
     // --- Save Button Component ---
     const SaveButton = ({ section }) => {
-        const { saveData, hasUnsavedChanges, lastSaveTime, autoSaveEnabled, canWriteToFirebase } = useData();
-
-        if (!canWriteToFirebase) return null;
+        const { saveData, hasUnsavedChanges, lastSaveTime, autoSaveEnabled } = useData();
 
         if (!hasUnsavedChanges) {
             return lastSaveTime ? (
                 <div className="fixed bottom-6 left-6 z-40">
-                    <div className="bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 btn-interactive">
+                    <div className="bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2">
                         <i className="fas fa-check"></i>
                         <span>آخر حفظ: {lastSaveTime.toLocaleTimeString()}</span>
                     </div>
@@ -585,7 +887,7 @@
             <div className="fixed bottom-6 left-6 z-40">
                 <button
                     onClick={saveData}
-                    className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-2 transition-all btn-interactive"
+                    className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-2 transition-all"
                 >
                     <i className="fas fa-save"></i>
                     {autoSaveEnabled ? `جاري الحفظ التلقائي...` : `حفظ ${section}`}
@@ -602,14 +904,14 @@
                 onClick={onClose}
             >
                 <div
-                    className="bg-white rounded-lg shadow-xl w-full max-w-md m-4 animate-fade-in-up hover-lift"
+                    className="bg-white rounded-lg shadow-xl w-full max-w-md m-4 animate-fade-in-up"
                     onClick={(e) => e.stopPropagation()}
                 >
                     <div className="flex justify-between items-center p-4 border-b">
                         <h3 className="text-xl font-bold text-slate-800">{title}</h3>
                         <button
                             onClick={onClose}
-                            className="text-slate-400 hover:text-slate-800 text-2xl btn-interactive"
+                            className="text-slate-400 hover:text-slate-800 text-2xl"
                         >
                             &times;
                         </button>
@@ -620,30 +922,6 @@
                             {footer}
                         </div>
                     )}
-                </div>
-            </div>
-        );
-    };
-
-    // --- Image Modal Component ---
-    const ImageModal = ({ src, alt, onClose }) => {
-        return (
-            <div
-                className="fixed inset-0 bg-black/80 backdrop-blur-sm flex justify-center items-center z-[100]"
-                onClick={onClose}
-            >
-                <div className="max-w-4xl max-h-full p-4" onClick={(e) => e.stopPropagation()}>
-                    <button
-                        onClick={onClose}
-                        className="absolute top-4 left-4 text-white text-2xl bg-black/50 rounded-full w-10 h-10 flex items-center justify-center btn-interactive"
-                    >
-                        &times;
-                    </button>
-                    <img 
-                        src={src} 
-                        alt={alt} 
-                        className="max-w-full max-h-full object-contain rounded-lg shadow-2xl hover-scale" 
-                    />
                 </div>
             </div>
         );
@@ -684,7 +962,7 @@
                             type="password"
                             value={currentPassword}
                             onChange={(e) => setCurrentPassword(e.target.value)}
-                            className="w-full p-2 border-2 border-slate-300 rounded-md focus:border-blue-500 transition-colors"
+                            className="w-full p-2 border-2 border-slate-300 rounded-md"
                         />
                     </div>
                     <div>
@@ -693,7 +971,7 @@
                             type="password"
                             value={newPassword}
                             onChange={(e) => setNewPassword(e.target.value)}
-                            className="w-full p-2 border-2 border-slate-300 rounded-md focus:border-blue-500 transition-colors"
+                            className="w-full p-2 border-2 border-slate-300 rounded-md"
                         />
                     </div>
                     <div>
@@ -702,14 +980,14 @@
                             type="password"
                             value={confirmPassword}
                             onChange={(e) => setConfirmPassword(e.target.value)}
-                            className="w-full p-2 border-2 border-slate-300 rounded-md focus:border-blue-500 transition-colors"
+                            className="w-full p-2 border-2 border-slate-300 rounded-md"
                         />
                     </div>
                     {error && <p className="text-red-500 text-sm text-center">{error}</p>}
                 </div>
                 <div className="mt-6 flex justify-end gap-3">
-                    <button onClick={() => setIsOpen(false)} className="px-4 py-2 bg-slate-200 text-slate-800 rounded-md hover:bg-slate-300 btn-interactive">إلغاء</button>
-                    <button onClick={handleSubmit} className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 btn-interactive">حفظ</button>
+                    <button onClick={() => setIsOpen(false)} className="px-4 py-2 bg-slate-200 text-slate-800 rounded-md hover:bg-slate-300">إلغاء</button>
+                    <button onClick={handleSubmit} className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">حفظ</button>
                 </div>
             </Modal>
         );
@@ -741,26 +1019,26 @@
 
         return (
             <div id="login-overlay" className="fixed inset-0 bg-black/80 backdrop-blur-sm flex justify-center items-center z-50">
-                <div className="login-container bg-white p-10 rounded-lg shadow-2xl w-full max-w-sm text-center animate-fade-in hover-lift">
+                <div className="login-container bg-white p-10 rounded-lg shadow-2xl w-full max-w-sm text-center animate-fade-in">
                     <h2 className="text-2xl font-bold mb-6 text-slate-800">تسجيل الدخول</h2>
                     
                     {view === 'options' && (
                         <div id="login-options" className="space-y-4">
                             <button
                                 onClick={() => login('teamLeader')}
-                                className="w-full py-3 px-4 bg-blue-500 text-white rounded-lg font-semibold text-lg hover:bg-blue-600 transition-colors btn-interactive"
+                                className="w-full py-3 px-4 bg-blue-500 text-white rounded-lg font-semibold text-lg hover:bg-blue-600 transition-colors"
                             >
                                 الدخول كقائد فريق
                             </button>
                             <button
                                 onClick={() => handleShowForm('follower')}
-                                className="w-full py-3 px-4 bg-slate-100 text-slate-800 rounded-lg font-semibold text-lg border-2 border-slate-300 hover:bg-slate-200 transition-colors btn-interactive"
+                                className="w-full py-3 px-4 bg-slate-100 text-slate-800 rounded-lg font-semibold text-lg border-2 border-slate-300 hover:bg-slate-200 transition-colors"
                             >
                                 الدخول كمتابع
                             </button>
                             <button
                                 onClick={() => handleShowForm('admin')}
-                                className="w-full py-3 px-4 bg-red-500 text-white rounded-lg font-semibold text-lg hover:bg-red-600 transition-colors btn-interactive"
+                                className="w-full py-3 px-4 bg-red-500 text-white rounded-lg font-semibold text-lg hover:bg-red-600 transition-colors"
                             >
                                 الدخول كمسؤول
                             </button>
@@ -776,7 +1054,7 @@
                                     id="username"
                                     value={username}
                                     onChange={(e) => setUsername(e.target.value)}
-                                    className="w-full p-3 border-2 border-slate-300 rounded-lg focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 transition hover-lift"
+                                    className="w-full p-3 border-2 border-slate-300 rounded-lg focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 transition"
                                     required
                                 />
                             </div>
@@ -787,18 +1065,18 @@
                                     id="password"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    className="w-full p-3 border-2 border-slate-300 rounded-lg focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 transition hover-lift"
+                                    className="w-full p-3 border-2 border-slate-300 rounded-lg focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 transition"
                                     required
                                 />
                             </div>
                             {error && <p id="login-error" className="text-red-500 text-sm text-center mb-2 h-5">{error}</p>}
-                            <button type="submit" className="w-full py-3 bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-600 transition-colors btn-interactive">
+                            <button type="submit" className="w-full py-3 bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-600 transition-colors">
                                 دخول
                             </button>
                             <button
                                 type="button"
                                 onClick={() => setView('options')}
-                                className="w-full mt-3 py-2 bg-slate-100 text-slate-800 rounded-lg font-semibold border-2 border-slate-300 hover:bg-slate-200 transition-colors btn-interactive"
+                                className="w-full mt-3 py-2 bg-slate-100 text-slate-800 rounded-lg font-semibold border-2 border-slate-300 hover:bg-slate-200 transition-colors"
                             >
                                 رجوع
                             </button>
@@ -810,47 +1088,56 @@
     };
 
     // --- From components/Layout.tsx ---
-    const FirebaseSyncButton = ({ isMobile = false }) => {
+    const GoogleSyncButton = ({ isMobile = false }) => {
         const { 
             syncStatus, 
             lastSyncTime,
-            isConnectedToFirebase,
-            firebaseInitialized,
-            canWriteToFirebase,
+            isSignedInToGoogle,
+            handleGoogleSignIn,
+            handleGoogleSignOut,
+            isSyncReady,
+            canSyncWithDrive,
             autoSaveEnabled,
-            toggleAutoSave,
-            isLoading
+            toggleAutoSave
         } = useData();
 
-        if (!firebaseInitialized) {
+        if (!isSyncReady) {
             return (
                 <div className="flex items-center gap-2 px-3 py-1.5 text-sm font-semibold text-slate-400">
                     <i className="fas fa-spinner fa-spin"></i>
-                    <span>جاري تحميل السحابة...</span>
+                    <span>جاري تحميل خدمات جوجل...</span>
                 </div>
             );
         }
         
-        if (isLoading) {
+        if (!isSignedInToGoogle && canSyncWithDrive) {
             return (
-                <div className={`flex items-center gap-2 text-sm font-semibold text-yellow-500 ${isMobile ? 'w-full justify-center' : ''}`}>
-                    <i className="fas fa-spinner fa-spin"></i>
-                    <span>جاري تحميل البيانات...</span>
-                </div>
+                <button 
+                    onClick={handleGoogleSignIn} 
+                    className={`flex items-center gap-2 text-sm font-semibold border-2 border-green-500 text-green-500 px-3 py-1.5 rounded-lg hover:bg-green-500 hover:text-white transition-colors ${isMobile ? 'w-full justify-center' : ''}`}
+                >
+                    <i className="fab fa-google-drive"></i>
+                    <span>مزامنة مع Drive</span>
+                </button>
             );
         }
         
-        if (!isConnectedToFirebase) {
+        if (!canSyncWithDrive) {
             return (
-                <div className={`flex items-center gap-2 text-sm font-semibold text-red-400 ${isMobile ? 'w-full justify-center' : ''}`}>
-                    <i className="fas fa-wifi-slash"></i>
-                    <span>غير متصل بالسحابة</span>
+                <div className={`flex items-center gap-2 text-sm font-semibold text-slate-400 ${isMobile ? 'w-full justify-center' : ''}`}>
+                    <i className="fas fa-cloud"></i>
+                    <span>مزامنة محلية فقط</span>
                 </div>
             );
         }
         
         let statusIcon, statusText, statusColor;
         switch (syncStatus) {
+            case 'AUTHENTICATING':
+                statusIcon = 'fas fa-spinner fa-spin';
+                statusText = 'جاري المصادقة...';
+                statusColor = 'text-yellow-400';
+                break;
             case 'SYNCING':
                 statusIcon = 'fas fa-sync fa-spin';
                 statusText = 'جاري المزامنة...';
@@ -858,7 +1145,7 @@
                 break;
             case 'SYNCED':
                 statusIcon = 'fas fa-check-circle';
-                statusText = `محدث: ${lastSyncTime?.toLocaleTimeString()}`;
+                statusText = `تمت المزامنة: ${lastSyncTime?.toLocaleTimeString()}`;
                 statusColor = 'text-green-400';
                 break;
             case 'ERROR':
@@ -868,29 +1155,33 @@
                 break;
             default:
                 statusIcon = 'fas fa-cloud';
-                statusText = 'متصل بالسحابة';
+                statusText = 'متصل بـ Drive';
                 statusColor = 'text-blue-400';
         }
 
         return (
             <div className={`flex items-center gap-3 ${isMobile ? 'w-full' : ''}`}>
-                {canWriteToFirebase && (
-                    <button 
-                        onClick={toggleAutoSave}
-                        className={`text-xs px-2 py-1 rounded transition-colors btn-interactive ${
-                            autoSaveEnabled 
-                                ? 'bg-green-500 text-white hover:bg-green-600' 
-                                : 'bg-slate-300 text-slate-600 hover:bg-slate-400'
-                        }`}
-                        title={autoSaveEnabled ? 'تعطيل الحفظ التلقائي' : 'تفعيل الحفظ التلقائي'}
-                    >
-                        <i className={`fas ${autoSaveEnabled ? 'fa-toggle-on' : 'fa-toggle-off'}`}></i>
-                    </button>
-                )}
+                <button 
+                    onClick={toggleAutoSave}
+                    className={`text-xs px-2 py-1 rounded transition-colors ${
+                        autoSaveEnabled 
+                            ? 'bg-green-500 text-white hover:bg-green-600' 
+                            : 'bg-slate-300 text-slate-600 hover:bg-slate-400'
+                    }`}
+                    title={autoSaveEnabled ? 'تعطيل الحفظ التلقائي' : 'تفعيل الحفظ التلقائي'}
+                >
+                    <i className={`fas ${autoSaveEnabled ? 'fa-toggle-on' : 'fa-toggle-off'}`}></i>
+                </button>
                 <div className={`flex items-center gap-2 ${statusColor} text-sm font-semibold`}>
                     <i className={statusIcon}></i>
                     <span>{statusText}</span>
                 </div>
+                <button 
+                    onClick={handleGoogleSignOut} 
+                    className="text-xs text-slate-400 hover:text-white px-2 py-1 rounded hover:bg-red-500 transition-colors"
+                >
+                    (خروج)
+                </button>
             </div>
         );
     }
@@ -915,7 +1206,7 @@
                 <a
                     href="#"
                     onClick={handleClick}
-                    className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors duration-300 whitespace-nowrap nav-link-interactive ${
+                    className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors duration-300 whitespace-nowrap ${
                         isActive ? 'bg-white/10' : 'hover:bg-white/10'
                     }`}
                 >
@@ -954,7 +1245,7 @@
                 <header className="bg-gradient-to-r from-slate-800 to-slate-900 text-white shadow-lg sticky top-0 z-40">
                     <div className="container mx-auto px-4 flex justify-between items-center h-16">
                         <div className="flex items-center gap-3">
-                            <img src="https://dc585.4shared.com/img/O-lyn4tEku/s24/19933795a18/_online?async&rand=0.6523859132132545" alt="Logo" className="h-10 hover-scale" />
+                            <img src="https://dc585.4shared.com/img/O-lyn4tEku/s24/19933795a18/_online?async&rand=0.6523859132132545" alt="Logo" className="h-10" />
                             <span className="text-xl font-bold whitespace-nowrap">شركة العصر الذكي</span>
                         </div>
                         
@@ -966,26 +1257,26 @@
 
                         <div className="flex items-center gap-4">
                             <div className="hidden xl:flex items-center gap-4">
-                                <FirebaseSyncButton />
-                                <div className="flex items-center gap-2 bg-white/10 px-3 py-2 rounded-lg hover-lift">
+                                <GoogleSyncButton />
+                                <div className="flex items-center gap-2 bg-white/10 px-3 py-2 rounded-lg">
                                     <i className="fas fa-user-circle text-blue-400 text-xl"></i>
                                     <span className="font-semibold text-sm">{userRole ? roleText[userRole] : ''}</span>
                                 </div>
                                 {userRole === 'admin' && (
                                     <>
-                                        <button onClick={() => setPasswordModalOpen(true)} className="flex items-center gap-2 text-sm font-semibold border-2 border-yellow-500 text-yellow-500 px-3 py-1.5 rounded-lg hover:bg-yellow-500 hover:text-slate-900 transition-colors btn-interactive">
+                                        <button onClick={() => setPasswordModalOpen(true)} className="flex items-center gap-2 text-sm font-semibold border-2 border-yellow-500 text-yellow-500 px-3 py-1.5 rounded-lg hover:bg-yellow-500 hover:text-slate-900 transition-colors">
                                             <i className="fas fa-key"></i>
                                         </button>
-                                        <button onClick={resetToInitialData} className="flex items-center gap-2 text-sm font-semibold border-2 border-purple-500 text-purple-500 px-3 py-1.5 rounded-lg hover:bg-purple-500 hover:text-white transition-colors btn-interactive" title="إعادة تعيين البيانات">
+                                        <button onClick={resetToInitialData} className="flex items-center gap-2 text-sm font-semibold border-2 border-purple-500 text-purple-500 px-3 py-1.5 rounded-lg hover:bg-purple-500 hover:text-white transition-colors" title="إعادة تعيين البيانات">
                                             <i className="fas fa-redo"></i>
                                         </button>
                                     </>
                                 )}
-                                <button onClick={logout} className="flex items-center gap-2 text-sm font-semibold border-2 border-red-500 text-red-500 px-3 py-1.5 rounded-lg hover:bg-red-500 hover:text-white transition-colors btn-interactive">
+                                <button onClick={logout} className="flex items-center gap-2 text-sm font-semibold border-2 border-red-500 text-red-500 px-3 py-1.5 rounded-lg hover:bg-red-500 hover:text-white transition-colors">
                                     <i className="fas fa-sign-out-alt"></i>
                                 </button>
                             </div>
-                            <button className="xl:hidden text-2xl btn-interactive" onClick={() => setMobileNavOpen(true)}>
+                            <button className="xl:hidden text-2xl" onClick={() => setMobileNavOpen(true)}>
                                 <i className="fas fa-bars"></i>
                             </button>
                         </div>
@@ -996,7 +1287,7 @@
                 <div className={`fixed top-0 right-0 h-full w-72 bg-slate-800 z-50 transform transition-transform duration-300 ease-in-out ${isMobileNavOpen ? 'translate-x-0' : 'translate-x-full'}`}>
                     <div className="p-4 flex justify-between items-center border-b border-white/10">
                         <span className="text-lg font-bold text-white">القائمة</span>
-                        <button onClick={() => setMobileNavOpen(false)} className="text-2xl text-white btn-interactive">
+                        <button onClick={() => setMobileNavOpen(false)} className="text-2xl text-white">
                             <i className="fas fa-times"></i>
                         </button>
                     </div>
@@ -1006,24 +1297,24 @@
                         </ul>
                     </nav>
                     <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-white/10 flex flex-col gap-3">
-                        <FirebaseSyncButton isMobile={true} />
-                        <div className="flex items-center gap-2 bg-white/10 px-3 py-2 rounded-lg text-sm text-white hover-lift">
+                        <GoogleSyncButton isMobile={true} />
+                        <div className="flex items-center gap-2 bg-white/10 px-3 py-2 rounded-lg text-sm text-white">
                                 <i className="fas fa-user-circle text-blue-400 text-xl"></i>
                                 <span className="font-semibold">{userRole ? roleText[userRole] : ''}</span>
                             </div>
                             {userRole === 'admin' && (
                                 <>
-                                    <button onClick={() => {setPasswordModalOpen(true); setMobileNavOpen(false)}} className="w-full flex items-center justify-center gap-2 text-sm font-semibold border-2 border-yellow-500 text-yellow-500 px-3 py-1.5 rounded-lg hover:bg-yellow-500 hover:text-slate-900 transition-colors btn-interactive">
+                                    <button onClick={() => {setPasswordModalOpen(true); setMobileNavOpen(false)}} className="w-full flex items-center justify-center gap-2 text-sm font-semibold border-2 border-yellow-500 text-yellow-500 px-3 py-1.5 rounded-lg hover:bg-yellow-500 hover:text-slate-900 transition-colors">
                                         <i className="fas fa-key"></i>
                                         <span>تغيير كلمة المرور</span>
                                     </button>
-                                    <button onClick={() => {resetToInitialData(); setMobileNavOpen(false);}} className="w-full flex items-center justify-center gap-2 text-sm font-semibold border-2 border-purple-500 text-purple-500 px-3 py-1.5 rounded-lg hover:bg-purple-500 hover:text-white transition-colors btn-interactive">
+                                    <button onClick={() => {resetToInitialData(); setMobileNavOpen(false);}} className="w-full flex items-center justify-center gap-2 text-sm font-semibold border-2 border-purple-500 text-purple-500 px-3 py-1.5 rounded-lg hover:bg-purple-500 hover:text-white transition-colors">
                                         <i className="fas fa-redo"></i>
                                         <span>إعادة تعيين البيانات</span>
                                     </button>
                                 </>
                             )}
-                            <button onClick={logout} className="w-full flex items-center justify-center gap-2 text-sm font-semibold border-2 border-red-500 text-red-500 px-3 py-1.5 rounded-lg hover:bg-red-500 hover:text-white transition-colors btn-interactive">
+                            <button onClick={logout} className="w-full flex items-center justify-center gap-2 text-sm font-semibold border-2 border-red-500 text-red-500 px-3 py-1.5 rounded-lg hover:bg-red-500 hover:text-white transition-colors">
                                 <i className="fas fa-sign-out-alt"></i>
                                 <span>تسجيل الخروج</span>
                             </button>
@@ -1047,7 +1338,7 @@
                                 <ul className="text-slate-300 space-y-2 text-sm">
                                 {navLinks.map(link => (
                                     <li key={`footer-${link.section}`} className={(link.hiddenFor && userRole && link.hiddenFor.includes(userRole)) ? 'hidden' : ''}>
-                                        <a href="#" onClick={(e) => { e.preventDefault(); setActiveSection(link.section); window.scrollTo(0,0); }} className="hover:text-blue-400 transition-colors nav-link-interactive">
+                                        <a href="#" onClick={(e) => { e.preventDefault(); setActiveSection(link.section); window.scrollTo(0,0); }} className="hover:text-blue-400 transition-colors">
                                             <i className={`fas ${link.icon} ml-2`}></i>{link.label}
                                         </a>
                                     </li>
@@ -1075,48 +1366,22 @@
     };
     
     // --- From sections/Home.tsx ---
-    const ServiceCard = ({ imgSrc, title, description, section, setActiveSection }) => {
-        const [isImageModalOpen, setImageModalOpen] = useState(false);
-
-        return (
-            <>
-                <div className="bg-white rounded-lg shadow-lg overflow-hidden card-interactive">
-                    <div className="h-44 overflow-hidden image-zoom-container cursor-pointer" onClick={() => setImageModalOpen(true)}>
-                        <img src={imgSrc} alt={title} className="w-full h-full object-cover image-zoom" />
-                    </div>
-                    <div className="p-5">
-                        <h3 className="text-xl font-bold text-slate-800 mb-2">{title}</h3>
-                        <p className="text-slate-600 mb-4 text-sm">{description}</p>
-                        <button onClick={() => setActiveSection(section)} className="font-semibold text-blue-500 hover:text-blue-600 btn-interactive">
-                            استعرض الآن <i className="fas fa-arrow-left mr-2"></i>
-                        </button>
-                    </div>
-                </div>
-                {isImageModalOpen && (
-                    <ImageModal 
-                        src={imgSrc} 
-                        alt={title} 
-                        onClose={() => setImageModalOpen(false)} 
-                    />
-                )}
-            </>
-        );
-    };
+    const ServiceCard = ({ imgSrc, title, description, section, setActiveSection }) => (
+        <div className="bg-white rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-1 transition-transform duration-300">
+            <div className="h-44 overflow-hidden">
+                <img src={imgSrc} alt={title} className="w-full h-full object-cover" />
+            </div>
+            <div className="p-5">
+                <h3 className="text-xl font-bold text-slate-800 mb-2">{title}</h3>
+                <p className="text-slate-600 mb-4 text-sm">{description}</p>
+                <button onClick={() => setActiveSection(section)} className="font-semibold text-blue-500 hover:text-blue-600">
+                    استعرض الآن <i className="fas fa-arrow-left mr-2"></i>
+                </button>
+            </div>
+        </div>
+    );
 
     const Home = ({ setActiveSection }) => {
-        const { isLoading } = useData();
-
-        if (isLoading) {
-            return (
-                <div className="animate-fade-in flex justify-center items-center h-64">
-                    <div className="text-center">
-                        <i className="fas fa-spinner fa-spin text-4xl text-blue-500 mb-4"></i>
-                        <p className="text-slate-600">جاري تحميل البيانات...</p>
-                    </div>
-                </div>
-            );
-        }
-
         return (
             <div className="animate-fade-in">
                 <section className="hero bg-cover bg-center h-[65vh] flex items-center justify-center text-white" style={{backgroundImage: "linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.7)), url('https://dc585.4shared.com/img/B9PkdLWRfa/s24/1993358aae8/_online?async&rand=0.5108986475801636')"}}>
@@ -1158,23 +1423,12 @@
 
     // --- From sections/Maps.tsx ---
     const Maps = () => {
-        const { data, updateData, isLoading } = useData();
+        const { data, updateData } = useData();
         const { userRole } = useAuth();
         const [searchTerm, setSearchTerm] = useState('');
         const [showForm, setShowForm] = useState(false);
         const [formData, setFormData] = useState({ name: '', link: '' });
         const [editingIndex, setEditingIndex] = useState(null);
-
-        if (isLoading) {
-            return (
-                <div className="container mx-auto px-4 py-12 animate-fade-in flex justify-center items-center h-64">
-                    <div className="text-center">
-                        <i className="fas fa-spinner fa-spin text-4xl text-blue-500 mb-4"></i>
-                        <p className="text-slate-600">جاري تحميل البيانات...</p>
-                    </div>
-                </div>
-            );
-        }
 
         const filteredMaps = data.maps.filter(map =>
             map.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -1226,11 +1480,11 @@
                             placeholder="ابحث عن خريطة المنطقة..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="flex-1 p-3 border-2 border-slate-300 rounded-lg focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 transition hover-lift"
+                            className="flex-1 p-3 border-2 border-slate-300 rounded-lg focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 transition"
                         />
                         <button 
                             onClick={handleSearch}
-                            className="bg-blue-500 text-white px-4 rounded-lg hover:bg-blue-600 transition-colors flex items-center justify-center btn-interactive"
+                            className="bg-blue-500 text-white px-4 rounded-lg hover:bg-blue-600 transition-colors flex items-center justify-center"
                             title="بحث"
                         >
                             <i className="fas fa-search"></i>
@@ -1239,8 +1493,8 @@
                 </div>
                 
                 {userRole === 'admin' && (
-                    <div className="max-w-xl mx-auto my-6 p-4 bg-slate-50 border rounded-lg hover-lift">
-                        <button onClick={showForm ? () => setShowForm(false) : handleAddNewClick} className="text-blue-600 font-semibold flex items-center gap-2 btn-interactive">
+                    <div className="max-w-xl mx-auto my-6 p-4 bg-slate-50 border rounded-lg">
+                        <button onClick={showForm ? () => setShowForm(false) : handleAddNewClick} className="text-blue-600 font-semibold flex items-center gap-2">
                             <i className={`fas ${showForm ? 'fa-times' : 'fa-plus'}`}></i>
                             {showForm ? 'إلغاء' : 'إضافة خريطة جديدة'}
                         </button>
@@ -1249,13 +1503,13 @@
                                 <h3 className="text-lg font-semibold">{editingIndex !== null ? 'تعديل الخريطة' : 'إضافة خريطة جديدة'}</h3>
                                 <div>
                                     <label className="block text-sm font-medium text-slate-700">اسم الخريطة</label>
-                                    <input type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="mt-1 w-full p-2 border rounded-md hover-lift" />
+                                    <input type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="mt-1 w-full p-2 border rounded-md" />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-slate-700">رابط الخريطة</label>
-                                    <input type="text" value={formData.link} onChange={e => setFormData({...formData, link: e.target.value})} className="mt-1 w-full p-2 border rounded-md hover-lift" />
+                                    <input type="text" value={formData.link} onChange={e => setFormData({...formData, link: e.target.value})} className="mt-1 w-full p-2 border rounded-md" />
                                 </div>
-                                <button onClick={handleSaveMap} className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 btn-interactive">حفظ الخريطة</button>
+                                <button onClick={handleSaveMap} className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">حفظ الخريطة</button>
                             </div>
                         )}
                     </div>
@@ -1265,7 +1519,7 @@
                     {filteredMaps.map((map, index) => {
                         const originalIndex = data.maps.findIndex(m => m.name === map.name && m.link === map.link);
                         return (
-                        <div key={originalIndex} className="bg-white rounded-lg shadow-md overflow-hidden text-center card-interactive relative group">
+                        <div key={originalIndex} className="bg-white rounded-lg shadow-md overflow-hidden text-center transform hover:-translate-y-1 transition-transform duration-300 relative group">
                             <a
                                 href={map.link}
                                 target="_blank"
@@ -1279,14 +1533,14 @@
                                 <div className="absolute top-1 right-1 z-10 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                     <button 
                                         onClick={() => handleEditClick(originalIndex)}
-                                        className="w-6 h-6 bg-yellow-400 text-white rounded-full flex items-center justify-center btn-interactive"
+                                        className="w-6 h-6 bg-yellow-400 text-white rounded-full flex items-center justify-center"
                                         title="تعديل الخريطة"
                                     >
                                         <i className="fas fa-pen text-xs"></i>
                                     </button>
                                     <button 
                                         onClick={() => handleDeleteMap(originalIndex)} 
-                                        className="w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center btn-interactive"
+                                        className="w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center"
                                         title="حذف الخريطة"
                                     >
                                         <i className="fas fa-trash-alt text-xs"></i>
@@ -1301,9 +1555,6 @@
         );
     };
     
-    // --- باقي الأقسام (Offers, Vlans, Materials, Maintenance, Ports, Contact) ---
-    // سيتم الحفاظ على نفس الكود مع إضافة تحميل البيانات
-    
     // --- From sections/Offers.tsx ---
     const EditableCell = ({ value, onSave, isAdmin }) => {
         const handleBlur = (e) => {
@@ -1315,7 +1566,7 @@
                 contentEditable={isAdmin}
                 onBlur={handleBlur}
                 suppressContentEditableWarning={true}
-                className="p-3 border-b border-slate-200 hover:bg-slate-50 transition-colors"
+                className="p-3 border-b border-slate-200"
             >
                 {value}
             </td>
@@ -1323,21 +1574,10 @@
     };
 
     const Offers = () => {
-        const { data, updateData, isLoading } = useData();
+        const { data, updateData } = useData();
         const { userRole } = useAuth();
         const [searchTerm, setSearchTerm] = useState('');
         const [selectedArea, setSelectedArea] = useState(null);
-
-        if (isLoading) {
-            return (
-                <div className="container mx-auto px-4 py-12 animate-fade-in flex justify-center items-center h-64">
-                    <div className="text-center">
-                        <i className="fas fa-spinner fa-spin text-4xl text-blue-500 mb-4"></i>
-                        <p className="text-slate-600">جاري تحميل البيانات...</p>
-                    </div>
-                </div>
-            );
-        }
 
         const isAdmin = userRole === 'admin';
 
@@ -1403,7 +1643,7 @@
             <section className="container mx-auto px-4 py-12 animate-fade-in">
                 <h2 className="text-3xl font-bold text-center mb-12 text-slate-800 relative after:content-[''] after:absolute after:w-20 after:h-1 after:bg-blue-500 after:left-1/2 after:-translate-x-1/2 after:bottom-[-10px] after:rounded-full">العروض المتاحة</h2>
                 
-                <div className="max-w-xl mx-auto p-6 bg-white rounded-lg shadow-md card-interactive">
+                <div className="max-w-xl mx-auto p-6 bg-white rounded-lg shadow-md">
                     <label htmlFor="areaNumber" className="block text-lg font-semibold text-slate-700 mb-2">أدخل رقم المنطقة أو اسمها:</label>
                     <input
                         type="text"
@@ -1411,15 +1651,15 @@
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                        className="w-full p-3 border-2 border-slate-300 rounded-lg focus:border-blue-500 hover-lift"
+                        className="w-full p-3 border-2 border-slate-300 rounded-lg focus:border-blue-500"
                         placeholder="مثال: 44, 115, مجمع..."
                     />
                     <div className="mt-4 flex flex-col gap-2">
-                        <button onClick={handleSearch} className="w-full py-3 bg-blue-500 text-white font-bold rounded-lg hover:bg-blue-600 transition btn-interactive">
+                        <button onClick={handleSearch} className="w-full py-3 bg-blue-500 text-white font-bold rounded-lg hover:bg-blue-600 transition">
                             عرض العروض <i className="fas fa-arrow-left mr-2"></i>
                         </button>
                         {isAdmin && (
-                            <button onClick={handleAddNewAreaOffer} className="w-full py-3 bg-green-500 text-white font-bold rounded-lg hover:bg-green-600 transition btn-interactive">
+                            <button onClick={handleAddNewAreaOffer} className="w-full py-3 bg-green-500 text-white font-bold rounded-lg hover:bg-green-600 transition">
                                 إضافة عرض لمنطقة جديدة
                             </button>
                         )}
@@ -1429,9 +1669,9 @@
                 {selectedArea && (
                     <div className="mt-12 space-y-8">
                         {data.offers[selectedArea].map((offer, offerIndex) => (
-                            <div key={offerIndex} className="bg-white rounded-lg shadow-lg p-6 relative group card-interactive">
+                            <div key={offerIndex} className="bg-white rounded-lg shadow-lg p-6 relative group">
                                 {isAdmin && (
-                                    <button onClick={() => handleDeleteOffer(selectedArea, offerIndex)} className="absolute top-3 left-3 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity btn-interactive" title="حذف العرض بالكامل">
+                                    <button onClick={() => handleDeleteOffer(selectedArea, offerIndex)} className="absolute top-3 left-3 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity" title="حذف العرض بالكامل">
                                         <i className="fas fa-trash-alt text-sm"></i>
                                     </button>
                                 )}
@@ -1439,7 +1679,7 @@
                                     contentEditable={isAdmin}
                                     onBlur={(e) => handleUpdate(selectedArea, offerIndex, 'title', e.currentTarget.textContent || '')}
                                     suppressContentEditableWarning={true}
-                                    className="text-2xl font-bold text-center mb-6 text-slate-800 p-1 rounded-md hover:bg-slate-50 transition-colors"
+                                    className="text-2xl font-bold text-center mb-6 text-slate-800 p-1 rounded-md"
                                 >
                                     {offer.title}
                                     {isAdmin && <i className="fas fa-pen text-xs text-slate-400 mr-2 opacity-0 group-hover:opacity-100"></i>}
@@ -1458,7 +1698,7 @@
                                         </thead>
                                         <tbody>
                                             {offer.table.map((row, rowIndex) => (
-                                                <tr key={rowIndex} className="odd:bg-slate-50 hover:bg-slate-100 transition-colors">
+                                                <tr key={rowIndex} className="odd:bg-slate-50">
                                                     {row.map((cell, cellIndex) => (
                                                         <EditableCell
                                                             key={cellIndex}
@@ -1469,7 +1709,7 @@
                                                     ))}
                                                     {isAdmin && (
                                                         <td className="p-3 border-b border-slate-200">
-                                                            <button onClick={() => handleDeleteRow(selectedArea, offerIndex, rowIndex)} className="text-red-500 hover:text-red-700 btn-interactive">
+                                                            <button onClick={() => handleDeleteRow(selectedArea, offerIndex, rowIndex)} className="text-red-500 hover:text-red-700">
                                                                 <i className="fas fa-trash-alt"></i>
                                                             </button>
                                                         </td>
@@ -1481,7 +1721,7 @@
                                 </div>
                                 {isAdmin && (
                                     <div className="text-center mt-4">
-                                        <button onClick={() => handleAddRow(selectedArea, offerIndex)} className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 btn-interactive">
+                                        <button onClick={() => handleAddRow(selectedArea, offerIndex)} className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600">
                                             <i className="fas fa-plus mr-2"></i> إضافة مدة
                                         </button>
                                     </div>
@@ -1490,7 +1730,7 @@
                                     contentEditable={isAdmin}
                                     onBlur={(e) => handleUpdate(selectedArea, offerIndex, 'note', e.currentTarget.textContent || '')}
                                     suppressContentEditableWarning={true}
-                                    className="mt-6 p-4 bg-slate-100 rounded-md text-center text-slate-700 font-semibold hover:bg-slate-200 transition-colors"
+                                    className="mt-6 p-4 bg-slate-100 rounded-md text-center text-slate-700 font-semibold"
                                 >
                                     {offer.note}
                                     {isAdmin && <i className="fas fa-pen text-xs text-slate-400 mr-2 opacity-0 group-hover:opacity-100"></i>}
@@ -1504,7 +1744,601 @@
         );
     };
 
-    // --- باقي الأقسام سيتم الحفاظ على نفس الهيكل مع إضافة isLoading ---
+    // --- From sections/Vlans.tsx ---
+    const Vlans = () => {
+        const { data, updateData } = useData();
+        const { userRole } = useAuth();
+        const isAdmin = userRole === 'admin';
+        const [searchTerm, setSearchTerm] = useState('');
+        const [searchResult, setSearchResult] = useState(null);
+
+        const handleSearch = () => {
+            const term = searchTerm.trim();
+            if (!term) return;
+
+            const vlan = data.vlans[term];
+            if (vlan) {
+                setSearchResult({ area: term, vlan });
+            } else {
+                setSearchResult(null);
+                showToast(`لا يوجد فيلان للمنطقة: ${term}`, 'error');
+            }
+        };
+
+        const handleAddVlan = () => {
+            const area = prompt("أدخل اسم المنطقة الجديدة:");
+            if (area && !data.vlans[area]) {
+                const number = prompt(`أدخل رقم الفيلان للمنطقة ${area}:`);
+                if (number) {
+                    const newVlans = { ...data.vlans, [area]: number };
+                    updateData({ ...data, vlans: newVlans });
+                    showToast(`تمت إضافة فيلان منطقة "${area}" بنجاح.`, 'success');
+                }
+            } else if (area) {
+                showToast("هذه المنطقة موجودة بالفعل.", 'error');
+            }
+        };
+        
+        const handleEditVlan = (area) => {
+            const newNumber = prompt(`أدخل رقم الفيلان الجديد للمنطقة ${area}:`, data.vlans[area]);
+            if (newNumber) {
+                const newVlans = { ...data.vlans, [area]: newNumber };
+                updateData({ ...data, vlans: newVlans });
+                if(searchResult && searchResult.area === area) {
+                    setSearchResult({ area, vlan: newNumber });
+                }
+                showToast(`تم تعديل فيلان منطقة "${area}" بنجاح.`, 'success');
+            }
+        };
+
+        return (
+            <section className="container mx-auto px-4 py-12 animate-fade-in">
+                <h2 className="text-3xl font-bold text-center mb-12 text-slate-800 relative after:content-[''] after:absolute after:w-20 after:h-1 after:bg-blue-500 after:left-1/2 after:-translate-x-1/2 after:bottom-[-10px] after:rounded-full">فيلانات المناطق</h2>
+                
+                <div className="max-w-lg mx-auto p-6 bg-white rounded-lg shadow-md text-center">
+                    <h3 className="text-2xl font-bold text-slate-800 mb-4">ابحث عن فيلان منطقة</h3>
+                    <div className="form-group mb-4 text-right">
+                        <label htmlFor="vlanInput" className="block text-lg font-semibold text-slate-700 mb-2">أدخل رقم المنطقة أو اسمها:</label>
+                        <input
+                            type="text"
+                            id="vlanInput"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                            className="w-full p-3 border-2 border-slate-300 rounded-lg focus:border-blue-500"
+                            placeholder="مثال: 151, مجمع..."
+                        />
+                    </div>
+                    <div className="flex flex-col gap-3">
+                        <button onClick={handleSearch} className="w-full py-3 bg-blue-500 text-white font-bold rounded-lg hover:bg-blue-600 transition">
+                            عرض الفيلان <i className="fas fa-arrow-left mr-2"></i>
+                        </button>
+                        {isAdmin && (
+                            <button onClick={handleAddVlan} className="w-full py-2 bg-green-500 text-white font-bold rounded-lg hover:bg-green-600 transition">
+                                <i className="fas fa-plus mr-2"></i> إضافة فيلان جديد
+                            </button>
+                        )}
+                    </div>
+                    {searchResult && (
+                        <div className="mt-8 p-6 bg-slate-50 border rounded-lg animate-fade-in">
+                            <div className="flex justify-center items-center gap-4">
+                                <div>
+                                    <p className="text-lg">المنطقة: <span className="font-bold">{searchResult.area}</span></p>
+                                    <p className="text-xl">الفيلان: <span className="font-extrabold text-blue-600 text-3xl">{searchResult.vlan}</span></p>
+                                </div>
+                                {isAdmin && (
+                                    <button onClick={() => handleEditVlan(searchResult.area)} className="px-3 py-1 bg-yellow-400 text-white text-sm rounded-md hover:bg-yellow-500" title="تعديل">
+                                        <i className="fas fa-pen"></i>
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    )}
+                </div>
+                <SaveButton section="الفيلانات" />
+            </section>
+        );
+    };
+    
+    // --- From sections/Materials.tsx ---
+    const categories = [
+        { id: 'routers', name: 'الراوترات' },
+        { id: 'onu', name: 'ONU' },
+        { id: 'ont', name: 'ONT' },
+        { id: 'other', name: 'المواد الأخرى' },
+    ];
+
+    const MaterialForm = ({ initialMaterial, onSave, onClose }) => {
+        const [material, setMaterial] = useState(
+            initialMaterial || { name: '', price: '', image: '', specs: [] }
+        );
+
+        const handleChange = (field, value) => {
+            if (field === 'specs') {
+                setMaterial({ ...material, specs: value.split('\n') });
+            } else {
+                setMaterial({ ...material, [field]: value });
+            }
+        };
+
+        const handleSave = () => {
+            onSave(material);
+            onClose();
+        };
+
+        return (
+            <Modal title={initialMaterial ? 'تعديل المادة' : 'إضافة مادة جديدة'} onClose={onClose}>
+                <div className="space-y-4 text-right">
+                    <div>
+                        <label className="block text-sm font-medium text-slate-700">اسم المادة</label>
+                        <input type="text" value={material.name} onChange={(e) => handleChange('name', e.target.value)} className="mt-1 w-full p-2 border rounded-md" />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-slate-700">السعر</label>
+                        <input type="text" value={material.price} onChange={(e) => handleChange('price', e.target.value)} className="mt-1 w-full p-2 border rounded-md" />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-slate-700">رابط الصورة</label>
+                        <input type="text" value={material.image} onChange={(e) => handleChange('image', e.target.value)} className="mt-1 w-full p-2 border rounded-md" />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-slate-700">المواصفات (كل مواصفة في سطر)</label>
+                        <textarea value={material.specs.join('\n')} onChange={(e) => handleChange('specs', e.target.value)} className="mt-1 w-full p-2 border rounded-md" rows={4}></textarea>
+                    </div>
+                </div>
+                <div className="mt-6 flex justify-end gap-3">
+                    <button onClick={onClose} className="px-4 py-2 bg-slate-200 text-slate-800 rounded-md hover:bg-slate-300">إلغاء</button>
+                    <button onClick={handleSave} className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">حفظ</button>
+                </div>
+            </Modal>
+        );
+    };
+
+    const Materials = () => {
+        const { data, updateData } = useData();
+        const { userRole } = useAuth();
+        const isAdmin = userRole === 'admin';
+        const [activeCategory, setActiveCategory] = useState('routers');
+        const [isModalOpen, setModalOpen] = useState(false);
+        const [editingMaterial, setEditingMaterial] = useState(null);
+
+        const handleOpenModal = (material = null, index = -1) => {
+            setEditingMaterial(material ? { material, index } : null);
+            setModalOpen(true);
+        };
+
+        const handleSaveMaterial = (material) => {
+            const newData = JSON.parse(JSON.stringify(data));
+            if (editingMaterial) {
+                newData.materials[activeCategory][editingMaterial.index] = material;
+            } else {
+                if (!newData.materials[activeCategory]) {
+                    newData.materials[activeCategory] = [];
+                }
+                newData.materials[activeCategory].push(material);
+            }
+            updateData(newData);
+        };
+
+        const handleDeleteMaterial = (index) => {
+            const newData = JSON.parse(JSON.stringify(data));
+            newData.materials[activeCategory].splice(index, 1);
+            updateData(newData);
+        };
+
+        return (
+            <section className="container mx-auto px-4 py-12 animate-fade-in">
+                <h2 className="text-3xl font-bold text-center mb-12 text-slate-800 relative after:content-[''] after:absolute after:w-20 after:h-1 after:bg-blue-500 after:left-1/2 after:-translate-x-1/2 after:bottom-[-10px] after:rounded-full">الأجهزة والمواد</h2>
+                
+                <div className="flex justify-center flex-wrap gap-4 mb-8">
+                    {categories.map(cat => (
+                        <button
+                            key={cat.id}
+                            onClick={() => setActiveCategory(cat.id)}
+                            className={`px-6 py-2 rounded-lg font-semibold transition-colors ${
+                                activeCategory === cat.id
+                                    ? 'bg-blue-500 text-white'
+                                    : 'bg-white text-blue-500 border-2 border-blue-500 hover:bg-blue-50'
+                            }`}
+                        >
+                            {cat.name}
+                        </button>
+                    ))}
+                </div>
+
+                {isAdmin && (
+                    <div className="text-center mb-8">
+                        <button onClick={() => handleOpenModal()} className="px-6 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 flex items-center gap-2 mx-auto">
+                            <i className="fas fa-plus"></i>
+                            <span>إضافة مادة جديدة</span>
+                        </button>
+                    </div>
+                )}
+
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {(data.materials[activeCategory] || []).map((item, index) => (
+                        <div key={index} className="bg-white rounded-lg shadow-lg overflow-hidden flex flex-col group relative">
+                            {isAdmin && (
+                                <div className="absolute top-2 right-2 z-10 flex gap-2">
+                                    <button onClick={() => handleOpenModal(item, index)} className="w-8 h-8 bg-yellow-400 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity" title="تعديل"><i className="fas fa-pen text-sm"></i></button>
+                                    <button onClick={() => handleDeleteMaterial(index)} className="w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity" title="حذف"><i className="fas fa-trash-alt text-sm"></i></button>
+                                </div>
+                            )}
+                            <div className="h-48 overflow-hidden">
+                                <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                            </div>
+                            <div className="p-5 flex flex-col flex-grow">
+                                <h3 className="text-lg font-bold text-slate-800">{item.name}</h3>
+                                <p className="text-2xl font-extrabold text-red-500 my-2">{item.price}</p>
+                                <ul className="text-slate-600 text-sm space-y-1 list-disc list-inside mt-auto">
+                                    {item.specs.map((spec, i) => <li key={i}>{spec}</li>)}
+                                </ul>
+                            </div>
+                        </div>
+                    ))}
+                    {(!data.materials[activeCategory] || data.materials[activeCategory].length === 0) && (
+                        <p className="col-span-full text-center text-slate-500">لا توجد مواد في هذه الفئة.</p>
+                    )}
+                </div>
+                {isModalOpen && <MaterialForm initialMaterial={editingMaterial?.material || null} onSave={handleSaveMaterial} onClose={() => setModalOpen(false)} />}
+                <SaveButton section="المواد" />
+            </section>
+        );
+    };
+    
+    // --- From sections/Maintenance.tsx ---
+    const Maintenance = () => {
+        const { data, updateData } = useData();
+        const { userRole } = useAuth();
+        const isAdmin = userRole === 'admin';
+
+        const handleAddNumber = () => {
+            const area = prompt("أدخل اسم المنطقة:");
+            if (area) {
+                const number = prompt(`أدخل الرقم للمنطقة ${area}:`);
+                if (number) {
+                    const newNumbers = [...data.maintenanceNumbers, { area, number }];
+                    updateData({ ...data, maintenanceNumbers: newNumbers });
+                }
+            }
+        };
+
+        const handleEditNumber = (index) => {
+            const item = data.maintenanceNumbers[index];
+            const newArea = prompt("تعديل اسم المنطقة:", item.area);
+            if (newArea) {
+                const newNumber = prompt(`تعديل الرقم للمنطقة ${newArea}:`, item.number);
+                if (newNumber) {
+                    const newNumbers = [...data.maintenanceNumbers];
+                    newNumbers[index] = { area: newArea, number: newNumber };
+                    updateData({ ...data, maintenanceNumbers: newNumbers });
+                }
+            }
+        };
+
+        const handleDeleteNumber = (index) => {
+            const newNumbers = [...data.maintenanceNumbers];
+            newNumbers.splice(index, 1);
+            updateData({ ...data, maintenanceNumbers: newNumbers });
+        };
+
+        const handleAddSticker = () => {
+            const name = prompt("أدخل اسم الستيكر:");
+            if (name) {
+                const thumb = prompt(`أدخل رابط الصورة المصغرة للستيكر ${name}:`);
+                if (thumb) {
+                    const newStickers = [...data.stickers, { name, thumb }];
+                    updateData({ ...data, stickers: newStickers });
+                }
+            }
+        };
+
+        const handleEditSticker = (index) => {
+            const item = data.stickers[index];
+            const newName = prompt("تعديل اسم الستيكر:", item.name);
+            if (newName) {
+                const newThumb = prompt(`تعديل رابط الصورة للستيكر ${newName}:`, item.thumb);
+                if (newThumb) {
+                    const newStickers = [...data.stickers];
+                    newStickers[index] = { name: newName, thumb: newThumb };
+                    updateData({ ...data, stickers: newStickers });
+                }
+            }
+        };
+
+        const handleDeleteSticker = (index) => {
+            const newStickers = [...data.stickers];
+            newStickers.splice(index, 1);
+            updateData({ ...data, stickers: newStickers });
+        };
+
+        return (
+            <section className="container mx-auto px-4 py-12 animate-fade-in">
+                <div className="flex justify-center items-center mb-12">
+                    <h2 className="text-3xl font-bold text-center text-slate-800 relative after:content-[''] after:absolute after:w-20 after:h-1 after:bg-blue-500 after:left-1/2 after:-translate-x-1/2 after:bottom-[-10px] after:rounded-full">أرقام هواتف الصيانة</h2>
+                    {isAdmin && <button onClick={handleAddNumber} className="mr-6 px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"><i className="fas fa-plus"></i></button>}
+                </div>
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {data.maintenanceNumbers.map((item, index) => (
+                        <div key={index} className="bg-white p-6 rounded-lg shadow-md text-center transform hover:-translate-y-1 transition-transform duration-300 group relative">
+                            {isAdmin && (
+                                <div className="absolute top-2 right-2 z-10 flex gap-2">
+                                    <button onClick={() => handleEditNumber(index)} className="w-7 h-7 bg-yellow-400 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity" title="تعديل"><i className="fas fa-pen text-xs"></i></button>
+                                    <button onClick={() => handleDeleteNumber(index)} className="w-7 h-7 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity" title="حذف"><i className="fas fa-trash-alt text-xs"></i></button>
+                                </div>
+                            )}
+                            <h3 className="text-lg font-bold text-slate-800 mb-2">{item.area}</h3>
+                            <p className="text-2xl font-extrabold text-blue-500 tracking-wider">{item.number}</p>
+                        </div>
+                    ))}
+                </div>
+
+                <div className="flex justify-center items-center mt-20 mb-12">
+                    <h2 className="text-3xl font-bold text-center text-slate-800 relative after:content-[''] after:absolute after:w-20 after:h-1 after:bg-blue-500 after:left-1/2 after:-translate-x-1/2 after:bottom-[-10px] after:rounded-full">ستيكرات المناطق</h2>
+                    {isAdmin && <button onClick={handleAddSticker} className="mr-6 px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"><i className="fas fa-plus"></i></button>}
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                    {data.stickers.map((sticker, index) => (
+                        <div key={index} className="bg-white p-4 rounded-lg shadow-md text-center transform hover:-translate-y-1 transition-transform duration-300 group relative">
+                            {isAdmin && (
+                                <div className="absolute top-2 right-2 z-10 flex gap-2">
+                                    <button onClick={() => handleEditSticker(index)} className="w-7 h-7 bg-yellow-400 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity" title="تعديل"><i className="fas fa-pen text-xs"></i></button>
+                                    <button onClick={() => handleDeleteSticker(index)} className="w-7 h-7 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity" title="حذف"><i className="fas fa-trash-alt text-xs"></i></button>
+                                </div>
+                            )}
+                            <a href={sticker.thumb} target="_blank" rel="noopener noreferrer">
+                                <img src={sticker.thumb} alt={sticker.name} className="w-24 h-24 object-cover rounded-full mx-auto mb-4 border-4 border-slate-200" />
+                                <p className="font-semibold text-slate-700">{sticker.name}</p>
+                            </a>
+                        </div>
+                    ))}
+                </div>
+                <SaveButton section="الصيانة" />
+            </section>
+        );
+    };
+    
+    // --- From sections/Ports.tsx ---
+    const Ports = () => {
+        const { data, updateData } = useData();
+        const { userRole } = useAuth();
+        const isAdmin = userRole === 'admin';
+        const [searchTerm, setSearchTerm] = useState('');
+        const [searchResult, setSearchResult] = useState(null);
+        const [showForm, setShowForm] = useState(false);
+        const [formData, setFormData] = useState({ area: '', zone: '', name: '', landmark: '', coordinates: '' });
+        const [editingIndex, setEditingIndex] = useState(null);
+
+        const handleSearch = () => {
+            const term = searchTerm.trim().toLowerCase();
+            if (!term) {
+                setSearchResult(null);
+                return;
+            }
+
+            const results = data.ports.filter(port => 
+                port.area.toLowerCase().includes(term) ||
+                port.zone.toLowerCase().includes(term) ||
+                port.name.toLowerCase().includes(term) ||
+                port.landmark.toLowerCase().includes(term) ||
+                port.coordinates.includes(term)
+            );
+
+            setSearchResult(results);
+            if (results.length === 0) {
+                showToast('لم يتم العثور على منافذ تطابق البحث', 'info');
+            }
+        };
+
+        const handleAddNewClick = () => {
+            setEditingIndex(null);
+            setFormData({ area: '', zone: '', name: '', landmark: '', coordinates: '' });
+            setShowForm(true);
+        };
+
+        const handleEditClick = (index) => {
+            setEditingIndex(index);
+            setFormData(data.ports[index]);
+            setShowForm(true);
+        };
+
+        const handleSavePort = () => {
+            if (formData.area && formData.zone && formData.name && formData.landmark && formData.coordinates) {
+                const newPorts = [...data.ports];
+                if (editingIndex !== null) {
+                    newPorts[editingIndex] = formData;
+                } else {
+                    newPorts.push(formData);
+                }
+                updateData({ ...data, ports: newPorts });
+                setShowForm(false);
+                setSearchTerm('');
+                setSearchResult(null);
+            } else {
+                showToast('يرجى ملء جميع الحقول', 'error');
+            }
+        };
+
+        const handleDeletePort = (index) => {
+            const newPorts = [...data.ports];
+            newPorts.splice(index, 1);
+            updateData({ ...data, ports: newPorts });
+            setSearchTerm('');
+            setSearchResult(null);
+        };
+
+        return (
+            <section className="container mx-auto px-4 py-12 animate-fade-in">
+                <h2 className="text-3xl font-bold text-center mb-12 text-slate-800 relative after:content-[''] after:absolute after:w-20 after:h-1 after:bg-blue-500 after:left-1/2 after:-translate-x-1/2 after:bottom-[-10px] after:rounded-full">المنافذ</h2>
+                
+                <div className="max-w-xl mx-auto mb-8">
+                    <div className="flex gap-2">
+                        <input
+                            type="text"
+                            placeholder="ابحث عن منفذ (المنطقة، الزون، الاسم، النقطة الدالة، الإحداثيات)..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                            className="flex-1 p-3 border-2 border-slate-300 rounded-lg focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 transition"
+                        />
+                        <button 
+                            onClick={handleSearch}
+                            className="bg-blue-500 text-white px-4 rounded-lg hover:bg-blue-600 transition-colors flex items-center justify-center"
+                            title="بحث"
+                        >
+                            <i className="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div className="flex justify-center mb-8 gap-4">
+                    {isAdmin && (
+                        <button onClick={handleAddNewClick} className="px-6 py-2 bg-green-500 text-white font-bold rounded-lg hover:bg-green-600 transition">
+                            إضافة منفذ جديد <i className="fas fa-plus mr-2"></i>
+                        </button>
+                    )}
+                </div>
+
+                {showForm && (
+                    <div className="max-w-2xl mx-auto mb-8 p-6 bg-white rounded-lg shadow-md">
+                        <h3 className="text-xl font-bold mb-4 text-center">{editingIndex !== null ? 'تعديل المنفذ' : 'إضافة منفذ جديد'}</h3>
+                        <div className="space-y-4 text-right">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700">المنطقة</label>
+                                    <input type="text" value={formData.area} onChange={e => setFormData({...formData, area: e.target.value})} className="mt-1 w-full p-2 border rounded-md" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700">الزون</label>
+                                    <input type="text" value={formData.zone} onChange={e => setFormData({...formData, zone: e.target.value})} className="mt-1 w-full p-2 border rounded-md" />
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700">اسم المنفذ</label>
+                                <input type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="mt-1 w-full p-2 border rounded-md" />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700">أقرب نقطة دالة</label>
+                                <input type="text" value={formData.landmark} onChange={e => setFormData({...formData, landmark: e.target.value})} className="mt-1 w-full p-2 border rounded-md" />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700">الإحداثيات</label>
+                                <input type="text" value={formData.coordinates} onChange={e => setFormData({...formData, coordinates: e.target.value})} className="mt-1 w-full p-2 border rounded-md" placeholder="مثال: 33.36311, 44.30947" />
+                            </div>
+                            <div className="flex justify-end gap-3 mt-6">
+                                <button onClick={() => setShowForm(false)} className="px-4 py-2 bg-slate-200 text-slate-800 rounded-md hover:bg-slate-300">إلغاء</button>
+                                <button onClick={handleSavePort} className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">حفظ المنفذ</button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {searchResult && searchResult.length > 0 && (
+                    <div className="max-w-6xl mx-auto mt-8">
+                        <h3 className="text-xl font-bold mb-4 text-center">نتائج البحث ({searchResult.length})</h3>
+                        <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-slate-200">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-center">
+                                    <thead className="bg-gradient-to-r from-blue-600 to-blue-700 text-white">
+                                        <tr>
+                                            <th className="p-4 font-bold text-lg border-r border-blue-500">المنطقة</th>
+                                            <th className="p-4 font-bold text-lg border-r border-blue-500">الزون</th>
+                                            <th className="p-4 font-bold text-lg border-r border-blue-500">اسم المنفذ</th>
+                                            <th className="p-4 font-bold text-lg border-r border-blue-500">أقرب نقطة دالة</th>
+                                            <th className="p-4 font-bold text-lg">الإحداثيات</th>
+                                            {isAdmin && <th className="p-4 font-bold text-lg border-r border-blue-500">الإجراءات</th>}
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {searchResult.map((port, index) => (
+                                            <tr key={index} className={`${index % 2 === 0 ? 'bg-slate-50' : 'bg-white'} hover:bg-blue-50 transition-colors`}>
+                                                <td className="p-4 border border-slate-200 font-medium">{port.area}</td>
+                                                <td className="p-4 border border-slate-200 font-medium">{port.zone}</td>
+                                                <td className="p-4 border border-slate-200 font-semibold text-blue-600">{port.name}</td>
+                                                <td className="p-4 border border-slate-200">{port.landmark}</td>
+                                                <td className="p-4 border border-slate-200 font-mono text-sm">{port.coordinates}</td>
+                                                {isAdmin && (
+                                                    <td className="p-4 border border-slate-200">
+                                                        <div className="flex justify-center gap-3">
+                                                            <button 
+                                                                onClick={() => handleEditClick(data.ports.findIndex(p => 
+                                                                    p.area === port.area && 
+                                                                    p.zone === port.zone && 
+                                                                    p.name === port.name
+                                                                ))}
+                                                                className="px-3 py-1 bg-yellow-400 text-white rounded-lg hover:bg-yellow-500 transition-colors flex items-center gap-1"
+                                                                title="تعديل"
+                                                            >
+                                                                <i className="fas fa-pen text-xs"></i>
+                                                                <span>تعديل</span>
+                                                            </button>
+                                                            <button 
+                                                                onClick={() => handleDeletePort(data.ports.findIndex(p => 
+                                                                    p.area === port.area && 
+                                                                    p.zone === port.zone && 
+                                                                    p.name === port.name
+                                                                ))} 
+                                                                className="px-3 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors flex items-center gap-1"
+                                                                title="حذف"
+                                                            >
+                                                                <i className="fas fa-trash-alt text-xs"></i>
+                                                                <span>حذف</span>
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                )}
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {searchResult && searchResult.length === 0 && (
+                    <div className="max-w-md mx-auto mt-8 p-6 bg-white rounded-lg shadow-md text-center">
+                        <p className="text-slate-500">لم يتم العثور على منافذ تطابق البحث</p>
+                    </div>
+                )}
+
+                {!searchResult && data.ports.length === 0 && (
+                    <div className="max-w-md mx-auto mt-8 p-6 bg-white rounded-lg shadow-md text-center">
+                        <p className="text-slate-500">لا توجد منافذ مضافة بعد</p>
+                    </div>
+                )}
+
+                <SaveButton section="المنافذ" />
+            </section>
+        );
+    };
+    
+    // --- From sections/Contact.tsx ---
+    const Contact = () => {
+        return (
+            <section className="container mx-auto px-4 py-12 animate-fade-in">
+                <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-8 text-center">
+                    <h2 className="text-3xl font-bold text-center mb-4 text-slate-800">تواصل معنا</h2>
+                    <p className="text-slate-600 mb-8">يسعدنا تواصلكم معنا عبر التطبيقات التالية:</p>
+                    
+                    <div className="flex justify-center gap-12">
+                        <a href="https://instagram.com/alitaha.98" target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-3 group">
+                            <div className="w-20 h-20 rounded-full flex items-center justify-center text-4xl text-white bg-gradient-to-br from-yellow-400 via-red-500 to-purple-600 group-hover:scale-110 transition-transform">
+                                <i className="fab fa-instagram"></i>
+                            </div>
+                            <span className="font-semibold text-slate-700">حساب الإنستغرام</span>
+                        </a>
+                        <a href="https://wa.me/+9647759313075" target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-3 group">
+                            <div className="w-20 h-20 rounded-full flex items-center justify-center text-4xl text-white bg-gradient-to-br from-green-400 to-teal-600 group-hover:scale-110 transition-transform">
+                                <i className="fab fa-whatsapp"></i>
+                            </div>
+                            <span className="font-semibold text-slate-700">واتساب الدعم الفني</span>
+                        </a>
+                    </div>
+                </div>
+            </section>
+        );
+    };
 
     // --- From App.tsx ---
     const App = () => {

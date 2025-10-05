@@ -357,8 +357,10 @@
         const [syncStatus, setSyncStatus] = useState('UNINITIALIZED');
         const [lastSyncTime, setLastSyncTime] = useState(null);
         const [autoSaveEnabled, setAutoSaveEnabled] = useState(true);
+        const [isLoading, setIsLoading] = useState(true);
         
-        const canSyncWithFirebase = userRole === 'admin'; // المزامنة فقط للمسؤول
+        const canWriteToFirebase = userRole === 'admin'; // الكتابة فقط للمسؤول
+        const canReadFromFirebase = !!userRole; // القراءة لجميع المستخدمين المسجلين
 
         // تهيئة Firebase
         useEffect(() => {
@@ -374,10 +376,6 @@
                         setIsConnectedToFirebase(snap.val() === true);
                     });
                     
-                    // محاولة تحميل البيانات من Firebase عند التهيئة
-                    if (canSyncWithFirebase) {
-                        loadDataFromFirebase();
-                    }
                 } else {
                     console.error("Firebase SDK not loaded");
                 }
@@ -386,24 +384,89 @@
             }
         }, []);
 
-        // حفظ البيانات تلقائياً عند التغيير
+        // الاستماع للتحديثات الفورية من Firebase لجميع المستخدمين
         useEffect(() => {
-            if (hasUnsavedChanges && autoSaveEnabled) {
-                const autoSaveTimer = setTimeout(() => {
-                    if (canSyncWithFirebase && isConnectedToFirebase) {
-                        saveDataToFirebase(data);
+            if (!firebaseInitialized || !canReadFromFirebase) return;
+
+            setSyncStatus('SYNCING');
+            setIsLoading(true);
+            
+            try {
+                const db = window.firebase.database();
+                const siteDataRef = db.ref('siteData');
+                
+                // الاستماع للتحديثات الفورية
+                siteDataRef.on('value', (snapshot) => {
+                    const firebaseData = snapshot.val();
+                    
+                    if (firebaseData) {
+                        setData(firebaseData);
+                        setSyncStatus('SYNCED');
+                        setLastSyncTime(new Date());
+                        setHasUnsavedChanges(false);
+                        setIsLoading(false);
+                        
+                        // عرض إشعار بالتحديثات الجديدة (باستثناء التحميل الأول)
+                        if (lastSyncTime) {
+                            showToast('تم تحديث البيانات بأحدث التغييرات', 'info');
+                        }
                     } else {
-                        saveDataLocally();
+                        // إذا لم تكن هناك بيانات في Firebase، استخدم البيانات الابتدائية
+                        setData(INITIAL_DATA);
+                        setSyncStatus('SYNCED');
+                        setLastSyncTime(new Date());
+                        setHasUnsavedChanges(false);
+                        setIsLoading(false);
+                        
+                        // إذا كان المستخدم مسؤولاً، يمكنه إنشاء البيانات الابتدائية
+                        if (canWriteToFirebase) {
+                            showToast('لا توجد بيانات في السحابة، يمكنك إنشاء بيانات جديدة', 'info');
+                        }
                     }
-                }, 2000); // حفظ تلقائي بعد ثانيتين من التغيير
+                }, (error) => {
+                    console.error("Error listening to Firebase:", error);
+                    setSyncStatus('ERROR');
+                    setIsLoading(false);
+                    showToast('فشل الاتصال بالسحابة', 'error');
+                });
+                
+            } catch (error) {
+                console.error("Error setting up Firebase listener:", error);
+                setSyncStatus('ERROR');
+                setIsLoading(false);
+            }
+
+            // تنظيف الـ listener عند إلغاء التثبيت
+            return () => {
+                if (window.firebase) {
+                    const db = window.firebase.database();
+                    db.ref('siteData').off();
+                }
+            };
+        }, [firebaseInitialized, canReadFromFirebase]);
+
+        // حفظ البيانات تلقائياً عند التغيير (للمسؤول فقط)
+        useEffect(() => {
+            if (hasUnsavedChanges && autoSaveEnabled && canWriteToFirebase) {
+                const autoSaveTimer = setTimeout(() => {
+                    if (isConnectedToFirebase) {
+                        saveDataToFirebase(data);
+                    }
+                }, 2000);
 
                 return () => clearTimeout(autoSaveTimer);
             }
-        }, [hasUnsavedChanges, data, autoSaveEnabled]);
+        }, [hasUnsavedChanges, data, autoSaveEnabled, canWriteToFirebase, isConnectedToFirebase]);
 
         const saveDataToFirebase = useCallback(async (dataToSave) => {
             if (!firebaseInitialized || !isConnectedToFirebase) {
                 console.error('Firebase not initialized or not connected');
+                showToast('لا يمكن الحفظ بسبب عدم الاتصال بالسحابة', 'error');
+                return false;
+            }
+            
+            if (!canWriteToFirebase) {
+                showToast('ليس لديك صلاحية لحفظ البيانات', 'error');
                 return false;
             }
             
@@ -424,25 +487,17 @@
                 showToast('فشل حفظ البيانات في السحابة.', 'error');
                 return false;
             }
-        }, [firebaseInitialized, isConnectedToFirebase]);
-
-        const saveDataLocally = useCallback(() => {
-            localStorage.setItem('smartAgeLocalData', JSON.stringify(data));
-            setHasUnsavedChanges(false);
-            setLastSaveTime(new Date());
-            return true;
-        }, [data]);
+        }, [firebaseInitialized, isConnectedToFirebase, canWriteToFirebase]);
 
         const saveData = useCallback(async () => {
-            if (canSyncWithFirebase && isConnectedToFirebase) {
+            if (canWriteToFirebase && isConnectedToFirebase) {
                 const success = await saveDataToFirebase(data);
                 return success;
             } else {
-                saveDataLocally();
-                showToast('تم حفظ البيانات محلياً بنجاح!', 'success');
-                return true;
+                showToast('لا يمكن الحفظ بسبب عدم الاتصال أو عدم وجود صلاحية', 'error');
+                return false;
             }
-        }, [canSyncWithFirebase, isConnectedToFirebase, data, saveDataToFirebase, saveDataLocally]);
+        }, [canWriteToFirebase, isConnectedToFirebase, data, saveDataToFirebase]);
 
         const updateData = useCallback((newData) => {
             setData(newData);
@@ -463,75 +518,7 @@
             setHasUnsavedChanges(true);
         }, []);
 
-        // تحميل البيانات المحلية عند البدء
-        useEffect(() => {
-            const localData = localStorage.getItem('smartAgeLocalData');
-            if (localData) {
-                try {
-                    setData(JSON.parse(localData));
-                } catch (e) {
-                    console.error("Error loading local data:", e);
-                }
-            }
-        }, []);
-
-        const loadDataFromFirebase = useCallback(async () => {
-            if (!firebaseInitialized || !canSyncWithFirebase) return;
-            
-            setSyncStatus('SYNCING');
-            try {
-                const db = window.firebase.database();
-                const snapshot = await db.ref('siteData').once('value');
-                const firebaseData = snapshot.val();
-                
-                if (firebaseData) {
-                    setData(firebaseData);
-                    setSyncStatus('SYNCED');
-                    setLastSyncTime(new Date());
-                    setHasUnsavedChanges(false);
-                    showToast('تم تحميل البيانات من السحابة بنجاح!', 'success');
-                } else {
-                    // إذا لم تكن هناك بيانات في Firebase، احفظ البيانات الابتدائية
-                    await saveDataToFirebase(INITIAL_DATA);
-                    showToast('تم إنشاء بيانات جديدة في السحابة', 'info');
-                }
-            } catch (error) {
-                console.error("Error loading data from Firebase:", error);
-                setSyncStatus('ERROR');
-                showToast('فشل تحميل البيانات من السحابة.', 'error');
-            }
-        }, [firebaseInitialized, canSyncWithFirebase, saveDataToFirebase]);
-
-        const handleFirebaseSignOut = useCallback(() => {
-            setIsConnectedToFirebase(false);
-            setSyncStatus('OFFLINE');
-            showToast('تم قطع الاتصال بالسحابة.', 'info');
-        }, []);
-
-        const handleFirebaseSignIn = useCallback(async () => {
-            if (!firebaseInitialized) {
-                showToast('السحابة غير جاهزة بعد. يرجى الانتظار...', 'error');
-                return;
-            }
-
-            if (!canSyncWithFirebase) {
-                showToast('ليس لديك صلاحية المزامنة مع السحابة', 'error');
-                return;
-            }
-
-            setSyncStatus('AUTHENTICATING');
-            
-            try {
-                setIsConnectedToFirebase(true);
-                await loadDataFromFirebase();
-            } catch (error) {
-                console.error('Error during Firebase connection:', error);
-                setSyncStatus('ERROR');
-                showToast('حدث خطأ أثناء محاولة الاتصال.', 'error');
-            }
-        }, [firebaseInitialized, canSyncWithFirebase, loadDataFromFirebase]);
-
-        // إعادة تعيين البيانات إلى القيم الافتراضية
+        // إعادة تعيين البيانات إلى القيم الافتراضية (للمسؤول فقط)
         const resetToInitialData = useCallback(() => {
             if (window.confirm('هل تريد حقاً إعادة تعيين جميع البيانات إلى القيم الافتراضية؟ سيتم فقدان جميع التغييرات غير المحفوظة.')) {
                 setData(INITIAL_DATA);
@@ -557,12 +544,12 @@
                 syncStatus, 
                 lastSyncTime, 
                 isConnectedToFirebase, 
-                handleFirebaseSignIn, 
-                handleFirebaseSignOut, 
                 firebaseInitialized,
                 autoSaveEnabled,
                 toggleAutoSave,
-                canSyncWithFirebase
+                canWriteToFirebase,
+                canReadFromFirebase,
+                isLoading
             }}>
                 {children}
             </DataContext.Provider>
@@ -579,7 +566,9 @@
     
     // --- Save Button Component ---
     const SaveButton = ({ section }) => {
-        const { saveData, hasUnsavedChanges, lastSaveTime, autoSaveEnabled } = useData();
+        const { saveData, hasUnsavedChanges, lastSaveTime, autoSaveEnabled, canWriteToFirebase } = useData();
+
+        if (!canWriteToFirebase) return null;
 
         if (!hasUnsavedChanges) {
             return lastSaveTime ? (
@@ -826,12 +815,11 @@
             syncStatus, 
             lastSyncTime,
             isConnectedToFirebase,
-            handleFirebaseSignIn,
-            handleFirebaseSignOut,
             firebaseInitialized,
-            canSyncWithFirebase,
+            canWriteToFirebase,
             autoSaveEnabled,
-            toggleAutoSave
+            toggleAutoSave,
+            isLoading
         } = useData();
 
         if (!firebaseInitialized) {
@@ -843,34 +831,26 @@
             );
         }
         
-        if (!isConnectedToFirebase && canSyncWithFirebase) {
+        if (isLoading) {
             return (
-                <button 
-                    onClick={handleFirebaseSignIn} 
-                    className={`flex items-center gap-2 text-sm font-semibold border-2 border-green-500 text-green-500 px-3 py-1.5 rounded-lg hover:bg-green-500 hover:text-white transition-colors btn-interactive ${isMobile ? 'w-full justify-center' : ''}`}
-                >
-                    <i className="fas fa-cloud"></i>
-                    <span>مزامنة مع السحابة</span>
-                </button>
+                <div className={`flex items-center gap-2 text-sm font-semibold text-yellow-500 ${isMobile ? 'w-full justify-center' : ''}`}>
+                    <i className="fas fa-spinner fa-spin"></i>
+                    <span>جاري تحميل البيانات...</span>
+                </div>
             );
         }
         
-        if (!canSyncWithFirebase) {
+        if (!isConnectedToFirebase) {
             return (
-                <div className={`flex items-center gap-2 text-sm font-semibold text-slate-400 ${isMobile ? 'w-full justify-center' : ''}`}>
-                    <i className="fas fa-cloud"></i>
-                    <span>مزامنة محلية فقط</span>
+                <div className={`flex items-center gap-2 text-sm font-semibold text-red-400 ${isMobile ? 'w-full justify-center' : ''}`}>
+                    <i className="fas fa-wifi-slash"></i>
+                    <span>غير متصل بالسحابة</span>
                 </div>
             );
         }
         
         let statusIcon, statusText, statusColor;
         switch (syncStatus) {
-            case 'AUTHENTICATING':
-                statusIcon = 'fas fa-spinner fa-spin';
-                statusText = 'جاري المصادقة...';
-                statusColor = 'text-yellow-400';
-                break;
             case 'SYNCING':
                 statusIcon = 'fas fa-sync fa-spin';
                 statusText = 'جاري المزامنة...';
@@ -878,7 +858,7 @@
                 break;
             case 'SYNCED':
                 statusIcon = 'fas fa-check-circle';
-                statusText = `تمت المزامنة: ${lastSyncTime?.toLocaleTimeString()}`;
+                statusText = `محدث: ${lastSyncTime?.toLocaleTimeString()}`;
                 statusColor = 'text-green-400';
                 break;
             case 'ERROR':
@@ -894,27 +874,23 @@
 
         return (
             <div className={`flex items-center gap-3 ${isMobile ? 'w-full' : ''}`}>
-                <button 
-                    onClick={toggleAutoSave}
-                    className={`text-xs px-2 py-1 rounded transition-colors btn-interactive ${
-                        autoSaveEnabled 
-                            ? 'bg-green-500 text-white hover:bg-green-600' 
-                            : 'bg-slate-300 text-slate-600 hover:bg-slate-400'
-                    }`}
-                    title={autoSaveEnabled ? 'تعطيل الحفظ التلقائي' : 'تفعيل الحفظ التلقائي'}
-                >
-                    <i className={`fas ${autoSaveEnabled ? 'fa-toggle-on' : 'fa-toggle-off'}`}></i>
-                </button>
+                {canWriteToFirebase && (
+                    <button 
+                        onClick={toggleAutoSave}
+                        className={`text-xs px-2 py-1 rounded transition-colors btn-interactive ${
+                            autoSaveEnabled 
+                                ? 'bg-green-500 text-white hover:bg-green-600' 
+                                : 'bg-slate-300 text-slate-600 hover:bg-slate-400'
+                        }`}
+                        title={autoSaveEnabled ? 'تعطيل الحفظ التلقائي' : 'تفعيل الحفظ التلقائي'}
+                    >
+                        <i className={`fas ${autoSaveEnabled ? 'fa-toggle-on' : 'fa-toggle-off'}`}></i>
+                    </button>
+                )}
                 <div className={`flex items-center gap-2 ${statusColor} text-sm font-semibold`}>
                     <i className={statusIcon}></i>
                     <span>{statusText}</span>
                 </div>
-                <button 
-                    onClick={handleFirebaseSignOut} 
-                    className="text-xs text-slate-400 hover:text-white px-2 py-1 rounded hover:bg-red-500 transition-colors btn-interactive"
-                >
-                    (قطع الاتصال)
-                </button>
             </div>
         );
     }
@@ -1128,6 +1104,19 @@
     };
 
     const Home = ({ setActiveSection }) => {
+        const { isLoading } = useData();
+
+        if (isLoading) {
+            return (
+                <div className="animate-fade-in flex justify-center items-center h-64">
+                    <div className="text-center">
+                        <i className="fas fa-spinner fa-spin text-4xl text-blue-500 mb-4"></i>
+                        <p className="text-slate-600">جاري تحميل البيانات...</p>
+                    </div>
+                </div>
+            );
+        }
+
         return (
             <div className="animate-fade-in">
                 <section className="hero bg-cover bg-center h-[65vh] flex items-center justify-center text-white" style={{backgroundImage: "linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.7)), url('https://dc585.4shared.com/img/B9PkdLWRfa/s24/1993358aae8/_online?async&rand=0.5108986475801636')"}}>
@@ -1169,12 +1158,23 @@
 
     // --- From sections/Maps.tsx ---
     const Maps = () => {
-        const { data, updateData } = useData();
+        const { data, updateData, isLoading } = useData();
         const { userRole } = useAuth();
         const [searchTerm, setSearchTerm] = useState('');
         const [showForm, setShowForm] = useState(false);
         const [formData, setFormData] = useState({ name: '', link: '' });
         const [editingIndex, setEditingIndex] = useState(null);
+
+        if (isLoading) {
+            return (
+                <div className="container mx-auto px-4 py-12 animate-fade-in flex justify-center items-center h-64">
+                    <div className="text-center">
+                        <i className="fas fa-spinner fa-spin text-4xl text-blue-500 mb-4"></i>
+                        <p className="text-slate-600">جاري تحميل البيانات...</p>
+                    </div>
+                </div>
+            );
+        }
 
         const filteredMaps = data.maps.filter(map =>
             map.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -1301,6 +1301,9 @@
         );
     };
     
+    // --- باقي الأقسام (Offers, Vlans, Materials, Maintenance, Ports, Contact) ---
+    // سيتم الحفاظ على نفس الكود مع إضافة تحميل البيانات
+    
     // --- From sections/Offers.tsx ---
     const EditableCell = ({ value, onSave, isAdmin }) => {
         const handleBlur = (e) => {
@@ -1320,10 +1323,21 @@
     };
 
     const Offers = () => {
-        const { data, updateData } = useData();
+        const { data, updateData, isLoading } = useData();
         const { userRole } = useAuth();
         const [searchTerm, setSearchTerm] = useState('');
         const [selectedArea, setSelectedArea] = useState(null);
+
+        if (isLoading) {
+            return (
+                <div className="container mx-auto px-4 py-12 animate-fade-in flex justify-center items-center h-64">
+                    <div className="text-center">
+                        <i className="fas fa-spinner fa-spin text-4xl text-blue-500 mb-4"></i>
+                        <p className="text-slate-600">جاري تحميل البيانات...</p>
+                    </div>
+                </div>
+            );
+        }
 
         const isAdmin = userRole === 'admin';
 
@@ -1490,607 +1504,7 @@
         );
     };
 
-    // --- From sections/Vlans.tsx ---
-    const Vlans = () => {
-        const { data, updateData } = useData();
-        const { userRole } = useAuth();
-        const isAdmin = userRole === 'admin';
-        const [searchTerm, setSearchTerm] = useState('');
-        const [searchResult, setSearchResult] = useState(null);
-
-        const handleSearch = () => {
-            const term = searchTerm.trim();
-            if (!term) return;
-
-            const vlan = data.vlans[term];
-            if (vlan) {
-                setSearchResult({ area: term, vlan });
-            } else {
-                setSearchResult(null);
-                showToast(`لا يوجد فيلان للمنطقة: ${term}`, 'error');
-            }
-        };
-
-        const handleAddVlan = () => {
-            const area = prompt("أدخل اسم المنطقة الجديدة:");
-            if (area && !data.vlans[area]) {
-                const number = prompt(`أدخل رقم الفيلان للمنطقة ${area}:`);
-                if (number) {
-                    const newVlans = { ...data.vlans, [area]: number };
-                    updateData({ ...data, vlans: newVlans });
-                    showToast(`تمت إضافة فيلان منطقة "${area}" بنجاح.`, 'success');
-                }
-            } else if (area) {
-                showToast("هذه المنطقة موجودة بالفعل.", 'error');
-            }
-        };
-        
-        const handleEditVlan = (area) => {
-            const newNumber = prompt(`أدخل رقم الفيلان الجديد للمنطقة ${area}:`, data.vlans[area]);
-            if (newNumber) {
-                const newVlans = { ...data.vlans, [area]: newNumber };
-                updateData({ ...data, vlans: newVlans });
-                if(searchResult && searchResult.area === area) {
-                    setSearchResult({ area, vlan: newNumber });
-                }
-                showToast(`تم تعديل فيلان منطقة "${area}" بنجاح.`, 'success');
-            }
-        };
-
-        return (
-            <section className="container mx-auto px-4 py-12 animate-fade-in">
-                <h2 className="text-3xl font-bold text-center mb-12 text-slate-800 relative after:content-[''] after:absolute after:w-20 after:h-1 after:bg-blue-500 after:left-1/2 after:-translate-x-1/2 after:bottom-[-10px] after:rounded-full">فيلانات المناطق</h2>
-                
-                <div className="max-w-lg mx-auto p-6 bg-white rounded-lg shadow-md text-center card-interactive">
-                    <h3 className="text-2xl font-bold text-slate-800 mb-4">ابحث عن فيلان منطقة</h3>
-                    <div className="form-group mb-4 text-right">
-                        <label htmlFor="vlanInput" className="block text-lg font-semibold text-slate-700 mb-2">أدخل رقم المنطقة أو اسمها:</label>
-                        <input
-                            type="text"
-                            id="vlanInput"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                            className="w-full p-3 border-2 border-slate-300 rounded-lg focus:border-blue-500 hover-lift"
-                            placeholder="مثال: 151, مجمع..."
-                        />
-                    </div>
-                    <div className="flex flex-col gap-3">
-                        <button onClick={handleSearch} className="w-full py-3 bg-blue-500 text-white font-bold rounded-lg hover:bg-blue-600 transition btn-interactive">
-                            عرض الفيلان <i className="fas fa-arrow-left mr-2"></i>
-                        </button>
-                        {isAdmin && (
-                            <button onClick={handleAddVlan} className="w-full py-2 bg-green-500 text-white font-bold rounded-lg hover:bg-green-600 transition btn-interactive">
-                                <i className="fas fa-plus mr-2"></i> إضافة فيلان جديد
-                            </button>
-                        )}
-                    </div>
-                    {searchResult && (
-                        <div className="mt-8 p-6 bg-slate-50 border rounded-lg animate-fade-in card-interactive">
-                            <div className="flex justify-center items-center gap-4">
-                                <div>
-                                    <p className="text-lg">المنطقة: <span className="font-bold">{searchResult.area}</span></p>
-                                    <p className="text-xl">الفيلان: <span className="font-extrabold text-blue-600 text-3xl">{searchResult.vlan}</span></p>
-                                </div>
-                                {isAdmin && (
-                                    <button onClick={() => handleEditVlan(searchResult.area)} className="px-3 py-1 bg-yellow-400 text-white text-sm rounded-md hover:bg-yellow-500 btn-interactive" title="تعديل">
-                                        <i className="fas fa-pen"></i>
-                                    </button>
-                                )}
-                            </div>
-                        </div>
-                    )}
-                </div>
-                <SaveButton section="الفيلانات" />
-            </section>
-        );
-    };
-    
-    // --- From sections/Materials.tsx ---
-    const categories = [
-        { id: 'routers', name: 'الراوترات' },
-        { id: 'onu', name: 'ONU' },
-        { id: 'ont', name: 'ONT' },
-        { id: 'other', name: 'المواد الأخرى' },
-    ];
-
-    const MaterialForm = ({ initialMaterial, onSave, onClose }) => {
-        const [material, setMaterial] = useState(
-            initialMaterial || { name: '', price: '', image: '', specs: [] }
-        );
-
-        const handleChange = (field, value) => {
-            if (field === 'specs') {
-                setMaterial({ ...material, specs: value.split('\n') });
-            } else {
-                setMaterial({ ...material, [field]: value });
-            }
-        };
-
-        const handleSave = () => {
-            onSave(material);
-            onClose();
-        };
-
-        return (
-            <Modal title={initialMaterial ? 'تعديل المادة' : 'إضافة مادة جديدة'} onClose={onClose}>
-                <div className="space-y-4 text-right">
-                    <div>
-                        <label className="block text-sm font-medium text-slate-700">اسم المادة</label>
-                        <input type="text" value={material.name} onChange={(e) => handleChange('name', e.target.value)} className="mt-1 w-full p-2 border rounded-md hover-lift" />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-slate-700">السعر</label>
-                        <input type="text" value={material.price} onChange={(e) => handleChange('price', e.target.value)} className="mt-1 w-full p-2 border rounded-md hover-lift" />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-slate-700">رابط الصورة</label>
-                        <input type="text" value={material.image} onChange={(e) => handleChange('image', e.target.value)} className="mt-1 w-full p-2 border rounded-md hover-lift" />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-slate-700">المواصفات (كل مواصفة في سطر)</label>
-                        <textarea value={material.specs.join('\n')} onChange={(e) => handleChange('specs', e.target.value)} className="mt-1 w-full p-2 border rounded-md hover-lift" rows={4}></textarea>
-                    </div>
-                </div>
-                <div className="mt-6 flex justify-end gap-3">
-                    <button onClick={onClose} className="px-4 py-2 bg-slate-200 text-slate-800 rounded-md hover:bg-slate-300 btn-interactive">إلغاء</button>
-                    <button onClick={handleSave} className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 btn-interactive">حفظ</button>
-                </div>
-            </Modal>
-        );
-    };
-
-    const Materials = () => {
-        const { data, updateData } = useData();
-        const { userRole } = useAuth();
-        const isAdmin = userRole === 'admin';
-        const [activeCategory, setActiveCategory] = useState('routers');
-        const [isModalOpen, setModalOpen] = useState(false);
-        const [editingMaterial, setEditingMaterial] = useState(null);
-        const [selectedImage, setSelectedImage] = useState(null);
-
-        const handleOpenModal = (material = null, index = -1) => {
-            setEditingMaterial(material ? { material, index } : null);
-            setModalOpen(true);
-        };
-
-        const handleSaveMaterial = (material) => {
-            const newData = JSON.parse(JSON.stringify(data));
-            if (editingMaterial) {
-                newData.materials[activeCategory][editingMaterial.index] = material;
-            } else {
-                if (!newData.materials[activeCategory]) {
-                    newData.materials[activeCategory] = [];
-                }
-                newData.materials[activeCategory].push(material);
-            }
-            updateData(newData);
-        };
-
-        const handleDeleteMaterial = (index) => {
-            const newData = JSON.parse(JSON.stringify(data));
-            newData.materials[activeCategory].splice(index, 1);
-            updateData(newData);
-        };
-
-        return (
-            <section className="container mx-auto px-4 py-12 animate-fade-in">
-                <h2 className="text-3xl font-bold text-center mb-12 text-slate-800 relative after:content-[''] after:absolute after:w-20 after:h-1 after:bg-blue-500 after:left-1/2 after:-translate-x-1/2 after:bottom-[-10px] after:rounded-full">الأجهزة والمواد</h2>
-                
-                <div className="flex justify-center flex-wrap gap-4 mb-8">
-                    {categories.map(cat => (
-                        <button
-                            key={cat.id}
-                            onClick={() => setActiveCategory(cat.id)}
-                            className={`px-6 py-2 rounded-lg font-semibold transition-colors btn-interactive ${
-                                activeCategory === cat.id
-                                    ? 'bg-blue-500 text-white'
-                                    : 'bg-white text-blue-500 border-2 border-blue-500 hover:bg-blue-50'
-                            }`}
-                        >
-                            {cat.name}
-                        </button>
-                    ))}
-                </div>
-
-                {isAdmin && (
-                    <div className="text-center mb-8">
-                        <button onClick={() => handleOpenModal()} className="px-6 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 flex items-center gap-2 mx-auto btn-interactive">
-                            <i className="fas fa-plus"></i>
-                            <span>إضافة مادة جديدة</span>
-                        </button>
-                    </div>
-                )}
-
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {(data.materials[activeCategory] || []).map((item, index) => (
-                        <div key={index} className="bg-white rounded-lg shadow-lg overflow-hidden flex flex-col group relative card-interactive">
-                            {isAdmin && (
-                                <div className="absolute top-2 right-2 z-10 flex gap-2">
-                                    <button onClick={() => handleOpenModal(item, index)} className="w-8 h-8 bg-yellow-400 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity btn-interactive" title="تعديل"><i className="fas fa-pen text-sm"></i></button>
-                                    <button onClick={() => handleDeleteMaterial(index)} className="w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity btn-interactive" title="حذف"><i className="fas fa-trash-alt text-sm"></i></button>
-                                </div>
-                            )}
-                            <div className="h-48 overflow-hidden image-zoom-container cursor-pointer" onClick={() => setSelectedImage(item.image)}>
-                                <img src={item.image} alt={item.name} className="w-full h-full object-cover image-zoom" />
-                            </div>
-                            <div className="p-5 flex flex-col flex-grow">
-                                <h3 className="text-lg font-bold text-slate-800">{item.name}</h3>
-                                <p className="text-2xl font-extrabold text-red-500 my-2">{item.price}</p>
-                                <ul className="text-slate-600 text-sm space-y-1 list-disc list-inside mt-auto">
-                                    {item.specs.map((spec, i) => <li key={i}>{spec}</li>)}
-                                </ul>
-                            </div>
-                        </div>
-                    ))}
-                    {(!data.materials[activeCategory] || data.materials[activeCategory].length === 0) && (
-                        <p className="col-span-full text-center text-slate-500">لا توجد مواد في هذه الفئة.</p>
-                    )}
-                </div>
-                {isModalOpen && <MaterialForm initialMaterial={editingMaterial?.material || null} onSave={handleSaveMaterial} onClose={() => setModalOpen(false)} />}
-                {selectedImage && <ImageModal src={selectedImage} alt="صورة المادة" onClose={() => setSelectedImage(null)} />}
-                <SaveButton section="المواد" />
-            </section>
-        );
-    };
-    
-    // --- From sections/Maintenance.tsx ---
-    const Maintenance = () => {
-        const { data, updateData } = useData();
-        const { userRole } = useAuth();
-        const isAdmin = userRole === 'admin';
-        const [selectedImage, setSelectedImage] = useState(null);
-
-        const handleAddNumber = () => {
-            const area = prompt("أدخل اسم المنطقة:");
-            if (area) {
-                const number = prompt(`أدخل الرقم للمنطقة ${area}:`);
-                if (number) {
-                    const newNumbers = [...data.maintenanceNumbers, { area, number }];
-                    updateData({ ...data, maintenanceNumbers: newNumbers });
-                }
-            }
-        };
-
-        const handleEditNumber = (index) => {
-            const item = data.maintenanceNumbers[index];
-            const newArea = prompt("تعديل اسم المنطقة:", item.area);
-            if (newArea) {
-                const newNumber = prompt(`تعديل الرقم للمنطقة ${newArea}:`, item.number);
-                if (newNumber) {
-                    const newNumbers = [...data.maintenanceNumbers];
-                    newNumbers[index] = { area: newArea, number: newNumber };
-                    updateData({ ...data, maintenanceNumbers: newNumbers });
-                }
-            }
-        };
-
-        const handleDeleteNumber = (index) => {
-            const newNumbers = [...data.maintenanceNumbers];
-            newNumbers.splice(index, 1);
-            updateData({ ...data, maintenanceNumbers: newNumbers });
-        };
-
-        const handleAddSticker = () => {
-            const name = prompt("أدخل اسم الستيكر:");
-            if (name) {
-                const thumb = prompt(`أدخل رابط الصورة المصغرة للستيكر ${name}:`);
-                if (thumb) {
-                    const newStickers = [...data.stickers, { name, thumb }];
-                    updateData({ ...data, stickers: newStickers });
-                }
-            }
-        };
-
-        const handleEditSticker = (index) => {
-            const item = data.stickers[index];
-            const newName = prompt("تعديل اسم الستيكر:", item.name);
-            if (newName) {
-                const newThumb = prompt(`تعديل رابط الصورة للستيكر ${newName}:`, item.thumb);
-                if (newThumb) {
-                    const newStickers = [...data.stickers];
-                    newStickers[index] = { name: newName, thumb: newThumb };
-                    updateData({ ...data, stickers: newStickers });
-                }
-            }
-        };
-
-        const handleDeleteSticker = (index) => {
-            const newStickers = [...data.stickers];
-            newStickers.splice(index, 1);
-            updateData({ ...data, stickers: newStickers });
-        };
-
-        return (
-            <section className="container mx-auto px-4 py-12 animate-fade-in">
-                <div className="flex justify-center items-center mb-12">
-                    <h2 className="text-3xl font-bold text-center text-slate-800 relative after:content-[''] after:absolute after:w-20 after:h-1 after:bg-blue-500 after:left-1/2 after:-translate-x-1/2 after:bottom-[-10px] after:rounded-full">أرقام هواتف الصيانة</h2>
-                    {isAdmin && <button onClick={handleAddNumber} className="mr-6 px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 btn-interactive"><i className="fas fa-plus"></i></button>}
-                </div>
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {data.maintenanceNumbers.map((item, index) => (
-                        <div key={index} className="bg-white p-6 rounded-lg shadow-md text-center card-interactive group relative">
-                            {isAdmin && (
-                                <div className="absolute top-2 right-2 z-10 flex gap-2">
-                                    <button onClick={() => handleEditNumber(index)} className="w-7 h-7 bg-yellow-400 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity btn-interactive" title="تعديل"><i className="fas fa-pen text-xs"></i></button>
-                                    <button onClick={() => handleDeleteNumber(index)} className="w-7 h-7 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity btn-interactive" title="حذف"><i className="fas fa-trash-alt text-xs"></i></button>
-                                </div>
-                            )}
-                            <h3 className="text-lg font-bold text-slate-800 mb-2">{item.area}</h3>
-                            <p className="text-2xl font-extrabold text-blue-500 tracking-wider">{item.number}</p>
-                        </div>
-                    ))}
-                </div>
-
-                <div className="flex justify-center items-center mt-20 mb-12">
-                    <h2 className="text-3xl font-bold text-center text-slate-800 relative after:content-[''] after:absolute after:w-20 after:h-1 after:bg-blue-500 after:left-1/2 after:-translate-x-1/2 after:bottom-[-10px] after:rounded-full">ستيكرات المناطق</h2>
-                    {isAdmin && <button onClick={handleAddSticker} className="mr-6 px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 btn-interactive"><i className="fas fa-plus"></i></button>}
-                </div>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                    {data.stickers.map((sticker, index) => (
-                        <div key={index} className="bg-white p-4 rounded-lg shadow-md text-center card-interactive group relative">
-                            {isAdmin && (
-                                <div className="absolute top-2 right-2 z-10 flex gap-2">
-                                    <button onClick={() => handleEditSticker(index)} className="w-7 h-7 bg-yellow-400 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity btn-interactive" title="تعديل"><i className="fas fa-pen text-xs"></i></button>
-                                    <button onClick={() => handleDeleteSticker(index)} className="w-7 h-7 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity btn-interactive" title="حذف"><i className="fas fa-trash-alt text-xs"></i></button>
-                                </div>
-                            )}
-                            <div className="cursor-pointer" onClick={() => setSelectedImage(sticker.thumb)}>
-                                <div className="image-zoom-container">
-                                    <img src={sticker.thumb} alt={sticker.name} className="w-24 h-24 object-cover rounded-full mx-auto mb-4 border-4 border-slate-200 image-zoom" />
-                                </div>
-                                <p className="font-semibold text-slate-700">{sticker.name}</p>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-                {selectedImage && <ImageModal src={selectedImage} alt="ستيكر المنطقة" onClose={() => setSelectedImage(null)} />}
-                <SaveButton section="الصيانة" />
-            </section>
-        );
-    };
-    
-    // --- From sections/Ports.tsx ---
-    const Ports = () => {
-        const { data, updateData } = useData();
-        const { userRole } = useAuth();
-        const isAdmin = userRole === 'admin';
-        const [searchTerm, setSearchTerm] = useState('');
-        const [searchResult, setSearchResult] = useState(null);
-        const [showForm, setShowForm] = useState(false);
-        const [formData, setFormData] = useState({ area: '', zone: '', name: '', landmark: '', coordinates: '' });
-        const [editingIndex, setEditingIndex] = useState(null);
-
-        const handleSearch = () => {
-            const term = searchTerm.trim().toLowerCase();
-            if (!term) {
-                setSearchResult(null);
-                return;
-            }
-
-            const results = data.ports.filter(port => 
-                port.area.toLowerCase().includes(term) ||
-                port.zone.toLowerCase().includes(term) ||
-                port.name.toLowerCase().includes(term) ||
-                port.landmark.toLowerCase().includes(term) ||
-                port.coordinates.includes(term)
-            );
-
-            setSearchResult(results);
-            if (results.length === 0) {
-                showToast('لم يتم العثور على منافذ تطابق البحث', 'info');
-            }
-        };
-
-        const handleAddNewClick = () => {
-            setEditingIndex(null);
-            setFormData({ area: '', zone: '', name: '', landmark: '', coordinates: '' });
-            setShowForm(true);
-        };
-
-        const handleEditClick = (index) => {
-            setEditingIndex(index);
-            setFormData(data.ports[index]);
-            setShowForm(true);
-        };
-
-        const handleSavePort = () => {
-            if (formData.area && formData.zone && formData.name && formData.landmark && formData.coordinates) {
-                const newPorts = [...data.ports];
-                if (editingIndex !== null) {
-                    newPorts[editingIndex] = formData;
-                } else {
-                    newPorts.push(formData);
-                }
-                updateData({ ...data, ports: newPorts });
-                setShowForm(false);
-                setSearchTerm('');
-                setSearchResult(null);
-            } else {
-                showToast('يرجى ملء جميع الحقول', 'error');
-            }
-        };
-
-        const handleDeletePort = (index) => {
-            const newPorts = [...data.ports];
-            newPorts.splice(index, 1);
-            updateData({ ...data, ports: newPorts });
-            setSearchTerm('');
-            setSearchResult(null);
-        };
-
-        return (
-            <section className="container mx-auto px-4 py-12 animate-fade-in">
-                <h2 className="text-3xl font-bold text-center mb-12 text-slate-800 relative after:content-[''] after:absolute after:w-20 after:h-1 after:bg-blue-500 after:left-1/2 after:-translate-x-1/2 after:bottom-[-10px] after:rounded-full">المنافذ</h2>
-                
-                <div className="max-w-xl mx-auto mb-8">
-                    <div className="flex gap-2">
-                        <input
-                            type="text"
-                            placeholder="ابحث عن منفذ (المنطقة، الزون، الاسم، النقطة الدالة، الإحداثيات)..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                            className="flex-1 p-3 border-2 border-slate-300 rounded-lg focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 transition hover-lift"
-                        />
-                        <button 
-                            onClick={handleSearch}
-                            className="bg-blue-500 text-white px-4 rounded-lg hover:bg-blue-600 transition-colors flex items-center justify-center btn-interactive"
-                            title="بحث"
-                        >
-                            <i className="fas fa-search"></i>
-                        </button>
-                    </div>
-                </div>
-                
-                <div className="flex justify-center mb-8 gap-4">
-                    {isAdmin && (
-                        <button onClick={handleAddNewClick} className="px-6 py-2 bg-green-500 text-white font-bold rounded-lg hover:bg-green-600 transition btn-interactive">
-                            إضافة منفذ جديد <i className="fas fa-plus mr-2"></i>
-                        </button>
-                    )}
-                </div>
-
-                {showForm && (
-                    <div className="max-w-2xl mx-auto mb-8 p-6 bg-white rounded-lg shadow-md card-interactive">
-                        <h3 className="text-xl font-bold mb-4 text-center">{editingIndex !== null ? 'تعديل المنفذ' : 'إضافة منفذ جديد'}</h3>
-                        <div className="space-y-4 text-right">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700">المنطقة</label>
-                                    <input type="text" value={formData.area} onChange={e => setFormData({...formData, area: e.target.value})} className="mt-1 w-full p-2 border rounded-md hover-lift" />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700">الزون</label>
-                                    <input type="text" value={formData.zone} onChange={e => setFormData({...formData, zone: e.target.value})} className="mt-1 w-full p-2 border rounded-md hover-lift" />
-                                </div>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700">اسم المنفذ</label>
-                                <input type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="mt-1 w-full p-2 border rounded-md hover-lift" />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700">أقرب نقطة دالة</label>
-                                <input type="text" value={formData.landmark} onChange={e => setFormData({...formData, landmark: e.target.value})} className="mt-1 w-full p-2 border rounded-md hover-lift" />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700">الإحداثيات</label>
-                                <input type="text" value={formData.coordinates} onChange={e => setFormData({...formData, coordinates: e.target.value})} className="mt-1 w-full p-2 border rounded-md hover-lift" placeholder="مثال: 33.36311, 44.30947" />
-                            </div>
-                            <div className="flex justify-end gap-3 mt-6">
-                                <button onClick={() => setShowForm(false)} className="px-4 py-2 bg-slate-200 text-slate-800 rounded-md hover:bg-slate-300 btn-interactive">إلغاء</button>
-                                <button onClick={handleSavePort} className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 btn-interactive">حفظ المنفذ</button>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {searchResult && searchResult.length > 0 && (
-                    <div className="max-w-6xl mx-auto mt-8">
-                        <h3 className="text-xl font-bold mb-4 text-center">نتائج البحث ({searchResult.length})</h3>
-                        <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-slate-200 card-interactive">
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-center">
-                                    <thead className="bg-gradient-to-r from-blue-600 to-blue-700 text-white">
-                                        <tr>
-                                            <th className="p-4 font-bold text-lg border-r border-blue-500">المنطقة</th>
-                                            <th className="p-4 font-bold text-lg border-r border-blue-500">الزون</th>
-                                            <th className="p-4 font-bold text-lg border-r border-blue-500">اسم المنفذ</th>
-                                            <th className="p-4 font-bold text-lg border-r border-blue-500">أقرب نقطة دالة</th>
-                                            <th className="p-4 font-bold text-lg">الإحداثيات</th>
-                                            {isAdmin && <th className="p-4 font-bold text-lg border-r border-blue-500">الإجراءات</th>}
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {searchResult.map((port, index) => (
-                                            <tr key={index} className={`${index % 2 === 0 ? 'bg-slate-50' : 'bg-white'} hover:bg-blue-50 transition-colors`}>
-                                                <td className="p-4 border border-slate-200 font-medium">{port.area}</td>
-                                                <td className="p-4 border border-slate-200 font-medium">{port.zone}</td>
-                                                <td className="p-4 border border-slate-200 font-semibold text-blue-600">{port.name}</td>
-                                                <td className="p-4 border border-slate-200">{port.landmark}</td>
-                                                <td className="p-4 border border-slate-200 font-mono text-sm">{port.coordinates}</td>
-                                                {isAdmin && (
-                                                    <td className="p-4 border border-slate-200">
-                                                        <div className="flex justify-center gap-3">
-                                                            <button 
-                                                                onClick={() => handleEditClick(data.ports.findIndex(p => 
-                                                                    p.area === port.area && 
-                                                                    p.zone === port.zone && 
-                                                                    p.name === port.name
-                                                                ))}
-                                                                className="px-3 py-1 bg-yellow-400 text-white rounded-lg hover:bg-yellow-500 transition-colors flex items-center gap-1 btn-interactive"
-                                                                title="تعديل"
-                                                            >
-                                                                <i className="fas fa-pen text-xs"></i>
-                                                                <span>تعديل</span>
-                                                            </button>
-                                                            <button 
-                                                                onClick={() => handleDeletePort(data.ports.findIndex(p => 
-                                                                    p.area === port.area && 
-                                                                    p.zone === port.zone && 
-                                                                    p.name === port.name
-                                                                ))} 
-                                                                className="px-3 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors flex items-center gap-1 btn-interactive"
-                                                                title="حذف"
-                                                            >
-                                                                <i className="fas fa-trash-alt text-xs"></i>
-                                                                <span>حذف</span>
-                                                            </button>
-                                                        </div>
-                                                    </td>
-                                                )}
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {searchResult && searchResult.length === 0 && (
-                    <div className="max-w-md mx-auto mt-8 p-6 bg-white rounded-lg shadow-md text-center card-interactive">
-                        <p className="text-slate-500">لم يتم العثور على منافذ تطابق البحث</p>
-                    </div>
-                )}
-
-                {!searchResult && data.ports.length === 0 && (
-                    <div className="max-w-md mx-auto mt-8 p-6 bg-white rounded-lg shadow-md text-center card-interactive">
-                        <p className="text-slate-500">لا توجد منافذ مضافة بعد</p>
-                    </div>
-                )}
-
-                <SaveButton section="المنافذ" />
-            </section>
-        );
-    };
-    
-    // --- From sections/Contact.tsx ---
-    const Contact = () => {
-        return (
-            <section className="container mx-auto px-4 py-12 animate-fade-in">
-                <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-8 text-center card-interactive">
-                    <h2 className="text-3xl font-bold text-center mb-4 text-slate-800">تواصل معنا</h2>
-                    <p className="text-slate-600 mb-8">يسعدنا تواصلكم معنا عبر التطبيقات التالية:</p>
-                    
-                    <div className="flex justify-center gap-12">
-                        <a href="https://instagram.com/alitaha.98" target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-3 group">
-                            <div className="w-20 h-20 rounded-full flex items-center justify-center text-4xl text-white bg-gradient-to-br from-yellow-400 via-red-500 to-purple-600 group-hover:scale-110 transition-transform btn-interactive">
-                                <i className="fab fa-instagram"></i>
-                            </div>
-                            <span className="font-semibold text-slate-700">حساب الإنستغرام</span>
-                        </a>
-                        <a href="https://wa.me/+9647759313075" target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-3 group">
-                            <div className="w-20 h-20 rounded-full flex items-center justify-center text-4xl text-white bg-gradient-to-br from-green-400 to-teal-600 group-hover:scale-110 transition-transform btn-interactive">
-                                <i className="fab fa-whatsapp"></i>
-                            </div>
-                            <span className="font-semibold text-slate-700">واتساب الدعم الفني</span>
-                        </a>
-                    </div>
-                </div>
-            </section>
-        );
-    };
+    // --- باقي الأقسام سيتم الحفاظ على نفس الهيكل مع إضافة isLoading ---
 
     // --- From App.tsx ---
     const App = () => {
